@@ -295,12 +295,28 @@ export default function Home() {
       <div className="max-w-2xl w-full mx-auto px-4 py-8 md:py-16 flex flex-col gap-8">
 
         {/* Header Section */}
-        <header className="text-center space-y-2">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#0F172A]">
-            Clario
-          </h1>
-          <p className="text-lg md:text-xl text-[#475569] font-medium">
-            Confusing text, explained simply.
+        <header className="text-center space-y-3">
+          <div className="flex items-center justify-center gap-2.5">
+            <svg
+              className="h-9 w-9 text-[#0D9488]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+              />
+            </svg>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[#0F172A]">
+              Clario
+            </h1>
+          </div>
+          <p className="text-lg md:text-xl text-[#334155] font-semibold max-w-md mx-auto leading-relaxed">
+            Confusing documents and complex text, explained simply.
           </p>
         </header>
 
@@ -310,7 +326,7 @@ export default function Home() {
 
             {/* Tone Selector */}
             <div className="flex flex-col items-center gap-2">
-              <span className="text-xs font-semibold text-[#475569] uppercase tracking-wider">
+              <span className="text-xs font-semibold text-[#334155] uppercase tracking-wider">
                 Audience Tone
               </span>
               <div className="inline-flex p-1 bg-white border border-[#E2E8F0] rounded-full shadow-sm gap-1 max-w-full overflow-x-auto scrollbar-none">
@@ -322,10 +338,10 @@ export default function Home() {
                       type="button"
                       disabled={isLoading}
                       onClick={() => setSelectedTone(tone.id)}
-                      className={`px-3.5 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-150 whitespace-nowrap ${
+                      className={`px-3.5 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
                         isActive
                           ? "bg-[#0D9488] text-white shadow-sm"
-                          : "text-[#475569] hover:bg-[#F4F6F9] hover:text-[#0F172A] disabled:opacity-50"
+                          : "text-[#334155] hover:bg-[#F4F6F9] hover:text-[#0F172A] disabled:opacity-50"
                       }`}
                     >
                       {tone.label}
@@ -336,7 +352,11 @@ export default function Home() {
             </div>
 
             {/* Input Card with Tabs */}
-            <div className="relative bg-white rounded-2xl border border-[#E2E8F0] shadow-sm focus-within:ring-2 focus-within:ring-[#0D9488] focus-within:border-transparent transition duration-150 overflow-hidden">
+            <div className={`relative bg-white rounded-2xl border transition duration-300 overflow-hidden ${
+              isLoading
+                ? "border-transparent ring-2 ring-[#0D9488] shadow-md animate-pulse"
+                : "border-[#E2E8F0] shadow-sm focus-within:ring-2 focus-within:ring-[#0D9488] focus-within:border-transparent"
+            }`}>
 
               {/* Input Mode Tabs */}
               <div className="flex border-b border-[#E2E8F0]">
@@ -347,13 +367,13 @@ export default function Home() {
                     setInputMode("text");
                     setError("");
                   }}
-                  className={`flex-1 py-3 text-xs md:text-sm font-bold border-b-2 transition-all duration-150 rounded-tl-2xl flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-3 text-xs md:text-sm font-bold border-b-2 transition-all duration-150 rounded-tl-2xl flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
                     inputMode === "text"
                       ? "border-[#0D9488] text-[#0D9488] bg-[#F4F6F9]/30"
-                      : "border-transparent text-[#475569] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
+                      : "border-transparent text-[#334155] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
                   }`}
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
                   </svg>
                   Paste Text
@@ -365,13 +385,13 @@ export default function Home() {
                     setInputMode("file");
                     setError("");
                   }}
-                  className={`flex-1 py-3 text-xs md:text-sm font-bold border-b-2 transition-all duration-150 rounded-tr-2xl flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-3 text-xs md:text-sm font-bold border-b-2 transition-all duration-150 rounded-tr-2xl flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
                     inputMode === "file"
                       ? "border-[#0D9488] text-[#0D9488] bg-[#F4F6F9]/30"
-                      : "border-transparent text-[#475569] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
+                      : "border-transparent text-[#334155] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
                   }`}
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                   Upload File
@@ -386,7 +406,7 @@ export default function Home() {
                   </label>
                   <textarea
                     id="inputText"
-                    className="w-full min-h-[180px] md:min-h-[220px] p-5 text-base md:text-lg text-[#0F172A] placeholder-[#475569]/60 focus:outline-none resize-y bg-transparent border-none"
+                    className="w-full min-h-[180px] md:min-h-[220px] p-5 text-base md:text-lg text-[#0F172A] placeholder-[#334155]/70 focus:outline-none resize-y bg-transparent border-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0D9488]"
                     placeholder="Paste anything confusing — a letter, a message, a form, an assignment..."
                     maxLength={CHARACTER_LIMIT}
                     value={inputText}
@@ -395,7 +415,7 @@ export default function Home() {
                   />
 
                   {/* Textarea Bottom Control bar */}
-                  <div className="flex justify-between items-center px-5 py-3 border-t border-[#E2E8F0] bg-[#F4F6F9]/50 text-sm text-[#475569]">
+                  <div className="flex justify-between items-center px-5 py-3 border-t border-[#E2E8F0] bg-[#F4F6F9]/50 text-sm text-[#334155]">
                     <span>
                       {inputText.length.toLocaleString()} / {CHARACTER_LIMIT.toLocaleString()} characters
                     </span>
@@ -404,7 +424,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setInputText("")}
-                        className="text-sm font-medium hover:text-[#0F172A] transition duration-150 animate-fade-in"
+                        className="text-sm font-bold text-[#0D9488] hover:text-[#0D9488]/80 transition duration-150 animate-fade-in focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none rounded"
                       >
                         Clear Input
                       </button>
@@ -430,7 +450,7 @@ export default function Home() {
                             />
                           </div>
                         ) : (
-                          <div className="w-16 h-16 rounded-lg bg-[#E2E8F0] flex items-center justify-center shrink-0 text-[#475569]">
+                          <div className="w-16 h-16 rounded-lg bg-[#E2E8F0] flex items-center justify-center shrink-0 text-[#334155]" aria-hidden="true">
                             <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
@@ -442,7 +462,7 @@ export default function Home() {
                           <p className="text-sm font-bold text-[#0F172A] truncate">
                             {selectedFile.name}
                           </p>
-                          <p className="text-xs text-[#475569] font-medium mt-0.5">
+                          <p className="text-xs text-[#334155] font-semibold mt-0.5">
                             {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                           </p>
                           {pdfPageCount !== null && (
@@ -457,10 +477,10 @@ export default function Home() {
                           type="button"
                           disabled={isLoading}
                           onClick={handleRemoveFile}
-                          className="p-1.5 rounded-lg text-[#475569] hover:bg-[#E2E8F0] hover:text-[#0F172A] transition duration-150 shrink-0"
+                          className="p-1.5 rounded-lg text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] transition duration-150 shrink-0 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none"
                           aria-label="Remove file"
                         >
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         </button>
@@ -472,7 +492,17 @@ export default function Home() {
                       onDragOver={onDragOver}
                       onDragLeave={onDragLeave}
                       onDrop={onDrop}
-                      className={`p-6 md:p-10 flex flex-col items-center justify-center gap-3 min-h-[180px] md:min-h-[220px] cursor-pointer transition-all duration-150 ${
+                      tabIndex={0}
+                      role="button"
+                      aria-label="Upload a file. Supports PDF and Images (JPG, PNG, WEBP) up to 5MB."
+                      onKeyDown={(e) => {
+                        if (isLoading) return;
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          document.getElementById("fileInput")?.click();
+                        }
+                      }}
+                      className={`p-6 md:p-10 flex flex-col items-center justify-center gap-3 min-h-[180px] md:min-h-[220px] cursor-pointer transition-all duration-150 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0D9488] focus-visible:outline-none focus-visible:bg-[#F4F6F9]/50 ${
                         isDragging
                           ? "border-2 border-dashed border-[#0D9488] bg-[#0D9488]/5 m-4 rounded-xl"
                           : "border-none hover:bg-[#F4F6F9]/50"
@@ -488,6 +518,7 @@ export default function Home() {
                         type="file"
                         accept=".pdf,image/jpeg,image/jpg,image/png,image/webp"
                         className="hidden"
+                        tabIndex={-1}
                         onChange={(e) => {
                           if (e.target.files && e.target.files.length > 0) {
                             handleFileSelection(e.target.files[0]);
@@ -495,7 +526,7 @@ export default function Home() {
                         }}
                         disabled={isLoading}
                       />
-                      <div className={`p-4 rounded-full bg-[#F4F6F9] text-[#475569] transition duration-150 ${isDragging ? "scale-115 text-[#0D9488]" : ""}`}>
+                      <div className={`p-4 rounded-full bg-[#F4F6F9] text-[#334155] transition duration-150 ${isDragging ? "scale-115 text-[#0D9488]" : ""}`} aria-hidden="true">
                         <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
@@ -504,7 +535,7 @@ export default function Home() {
                         <p className="text-sm md:text-base font-bold text-[#0F172A]">
                           Drag & drop your file here
                         </p>
-                        <p className="text-xs text-[#475569] font-medium mt-1">
+                        <p className="text-xs text-[#334155] font-semibold mt-1">
                           Supports PDF and Images (JPG, PNG, WEBP) up to 5MB
                         </p>
                         <p className="text-xs text-[#0D9488] font-bold mt-2.5 underline block md:hidden">
@@ -518,7 +549,7 @@ export default function Home() {
                   )}
 
                   {/* File Upload Bottom Control bar */}
-                  <div className="flex justify-between items-center px-5 py-3 border-t border-[#E2E8F0] bg-[#F4F6F9]/50 text-sm text-[#475569]">
+                  <div className="flex justify-between items-center px-5 py-3 border-t border-[#E2E8F0] bg-[#F4F6F9]/50 text-sm text-[#334155]">
                     <span>
                       {selectedFile ? "1 file selected" : "No file selected"}
                     </span>
@@ -527,7 +558,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={handleRemoveFile}
-                        className="text-sm font-medium hover:text-[#0F172A] transition duration-150 animate-fade-in"
+                        className="text-sm font-bold text-[#0D9488] hover:text-[#0D9488]/80 transition duration-150 animate-fade-in focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none rounded"
                       >
                         Clear File
                       </button>
@@ -542,10 +573,10 @@ export default function Home() {
             {error && (
               <div
                 role="alert"
-                className="p-4 bg-[#FEF2F2] border border-[#991B1B]/10 rounded-xl flex flex-col gap-1 animate-fade-in"
+                className="p-4 bg-[#FEF2F2] border border-[#991B1B]/15 rounded-xl flex flex-col gap-1 animate-fade-in text-[#7F1D1D]"
               >
-                <span className="text-sm font-bold text-[#991B1B]">Error</span>
-                <p className="text-sm text-[#991B1B] font-medium">{error}</p>
+                <span className="text-sm font-extrabold tracking-wide uppercase">Error</span>
+                <p className="text-sm font-semibold">{error}</p>
               </div>
             )}
 
@@ -554,17 +585,17 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
-                className={`w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-base shadow-sm transition duration-150 ${
+                className={`w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-base shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
                   isLoading
-                    ? "bg-[#0D9488]/70 text-white cursor-not-allowed"
+                    ? "bg-[#0D9488] text-white cursor-not-allowed scale-[0.98]"
                     : isSubmitDisabled
-                    ? "bg-[#E2E8F0] text-[#475569]/50 cursor-not-allowed shadow-none"
-                    : "bg-[#0D9488] text-white hover:bg-[#0D9488]/90 focus:ring-2 focus:ring-offset-2 focus:ring-[#0D9488] active:scale-[0.98]"
+                    ? "bg-[#E2E8F0] text-[#334155]/50 cursor-not-allowed shadow-none"
+                    : "bg-[#0D9488] text-white hover:bg-[#0D9488]/90 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
                 }`}
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2 justify-center">
-                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
@@ -577,9 +608,45 @@ export default function Home() {
             </div>
           </form>
 
+          {/* Skeleton Loading State */}
+          {isLoading && (
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-6 md:p-8 space-y-6 animate-pulse transition-all duration-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
+                <div className="h-7 w-48 bg-slate-200 rounded-lg" />
+                <div className="h-9 w-32 bg-slate-100 rounded-lg" />
+              </div>
+
+              {/* Simulated Risk Badge Skeleton */}
+              <div className="h-8 w-44 bg-[#E6F4EA]/70 rounded-full" />
+
+              {/* Paragraph Line Skeletons */}
+              <div className="space-y-4">
+                <div className="h-4 bg-slate-200 rounded w-full" />
+                <div className="h-4 bg-slate-200 rounded w-11/12" />
+                <div className="h-4 bg-slate-200 rounded w-10/12" />
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <div className="h-4 bg-slate-200 rounded w-1/2" />
+                <div className="flex items-start gap-3 pl-4">
+                  <div className="h-2 w-2 rounded-full bg-slate-200 mt-1.5 shrink-0" />
+                  <div className="h-4 bg-slate-200 rounded w-11/12" />
+                </div>
+                <div className="flex items-start gap-3 pl-4">
+                  <div className="h-2 w-2 rounded-full bg-slate-200 mt-1.5 shrink-0" />
+                  <div className="h-4 bg-slate-200 rounded w-10/12" />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-[#E2E8F0] flex justify-end">
+                <div className="h-10 w-28 bg-slate-100 rounded-xl" />
+              </div>
+            </div>
+          )}
+
           {/* Result Card Display */}
-          {explanation && (
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md p-6 md:p-8 space-y-6 transition-all duration-300">
+          {explanation && !isLoading && (
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md p-6 md:p-8 space-y-6 transition-all duration-300 animate-fade-in">
 
               {/* Header section with Actions */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
@@ -591,25 +658,25 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition duration-150 flex items-center gap-2 self-start sm:self-auto ${
+                  className={`px-4 py-2 rounded-lg text-sm font-bold transition duration-150 flex items-center gap-2 self-start sm:self-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
                     copied
                       ? "bg-[#0D9488]/10 text-[#0D9488]"
-                      : "bg-[#F4F6F9] text-[#475569] hover:bg-[#E2E8F0] hover:text-[#0F172A]"
+                      : "bg-[#F4F6F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A]"
                   }`}
                 >
                   {copied ? (
                     <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                       Copied!
                     </>
                   ) : (
                     <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                       </svg>
-                      Copy
+                      Copy Explanation
                     </>
                   )}
                 </button>
@@ -619,8 +686,8 @@ export default function Home() {
               <div className="flex flex-col gap-3">
                 {riskLevel === "low" && (
                   <div className="flex">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#ECFDF5] text-[#065F46] border border-[#065F46]/10">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#065F46]" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#E6F4EA] text-[#137333] border border-[#137333]/15 uppercase tracking-wide">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#137333]" />
                       No obvious risk detected
                     </span>
                   </div>
@@ -629,13 +696,13 @@ export default function Home() {
                 {riskLevel === "medium" && (
                   <div className="space-y-2">
                     <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#FFFBEB] text-[#92400E] border border-[#92400E]/15">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#92400E]" />
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FEF7E0] text-[#B06000] border border-[#B06000]/15 uppercase tracking-wide">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#B06000]" />
                         Medium Risk
                       </span>
                     </div>
                     {riskReason && (
-                      <div className="p-3.5 bg-[#FFFBEB] border border-[#92400E]/15 text-[#92400E] rounded-xl text-xs md:text-sm font-medium leading-relaxed">
+                      <div className="p-4 bg-[#FEF7E0]/60 border border-[#B06000]/15 text-[#78350F] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
                         {riskReason}
                       </div>
                     )}
@@ -645,13 +712,13 @@ export default function Home() {
                 {riskLevel === "high" && (
                   <div className="space-y-2">
                     <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#FEF2F2] text-[#991B1B] border border-[#991B1B]/15">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#991B1B]" />
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FCE8E6] text-[#C5221F] border border-[#C5221F]/15 uppercase tracking-wide animate-pulse">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#C5221F]" />
                         High Risk
                       </span>
                     </div>
                     {riskReason && (
-                      <div className="p-3.5 bg-[#FEF2F2] border border-[#991B1B]/15 text-[#991B1B] rounded-xl text-xs md:text-sm font-medium leading-relaxed">
+                      <div className="p-4 bg-[#FCE8E6]/60 border border-[#C5221F]/15 text-[#7F1D1D] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
                         {riskReason}
                       </div>
                     )}
@@ -669,7 +736,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="px-6 py-3 rounded-xl border border-[#E2E8F0] bg-white text-[#475569] hover:bg-[#F4F6F9] hover:text-[#0F172A] font-bold text-sm transition duration-150 active:scale-[0.98]"
+                  className="px-6 py-3 rounded-xl border border-[#E2E8F0] bg-white text-[#334155] hover:bg-[#F4F6F9] hover:text-[#0F172A] font-bold text-sm transition duration-150 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none"
                 >
                   Try another
                 </button>
@@ -677,6 +744,41 @@ export default function Home() {
             </div>
           )}
         </main>
+
+        {/* How it works / About box */}
+        <section className="bg-white border border-[#E2E8F0] rounded-2xl p-6 md:p-8 shadow-sm space-y-4">
+          <h2 className="text-lg font-bold text-[#0F172A] flex items-center gap-2">
+            <svg
+              className="h-5 w-5 text-[#0D9488]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M11.25 11.25l.041-.02a.75.75 0 111.084 1.085l-.26.26m0 0a1.5 1.5 0 10-2.23 2.23l.26-.26m0 0V15.75m1.125-12.75h7.5c.621 0 1.125.504 1.125 1.125v15c0 .621-.504 1.125-1.125 1.125h-15A1.125 1.125 0 013 18.75v-15c0-.621.504-1.125 1.125-1.125h7.5"
+              />
+            </svg>
+            How it works & Privacy
+          </h2>
+          <p className="text-[#334155] text-sm md:text-base leading-relaxed font-medium">
+            Clario is a secure, compassionate reading assistant designed to turn confusing documents into plain language. Your privacy is our priority: we only log anonymous usage metrics, and your text, documents, or personal data are never saved or stored. Simply paste text, drag in a document, or snap a photo to begin.
+          </p>
+        </section>
+
+        {/* Footer Section */}
+        <footer className="text-center pt-4 border-t border-[#E2E8F0] space-y-1">
+          <p className="text-sm font-bold text-[#0F172A]">
+            Clario
+          </p>
+          <p className="text-xs text-[#334155] font-semibold">
+            Empowering reading with clarity, compassion, and absolute privacy.
+          </p>
+        </footer>
+
       </div>
     </div>
   );
