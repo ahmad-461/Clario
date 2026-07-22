@@ -1,5 +1,37 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType, Schema } from "@google/generative-ai";
+
+const SYSTEM_INSTRUCTIONS: Record<string, string> = {
+  simple:
+    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Explain like you're talking to a person who has no background knowledge. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text.",
+  student:
+    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Relate the explanation to a learning context, and use simple examples where helpful. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text.",
+  teacher:
+    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Use a slightly more structured/informative tone, as if preparing to explain it to a class. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text.",
+  "elderly-friendly":
+    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Use extra simple wording, larger implicit warmth, and avoid jargon completely. Use short paragraphs and clear bullet points.",
+};
+
+const RESPONSE_SCHEMA: Schema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    explanation: {
+      type: SchemaType.STRING,
+      description: "The plain-language, simplified explanation of the text, matching the requested tone/audience mode.",
+    },
+    riskLevel: {
+      type: SchemaType.STRING,
+      format: "enum",
+      enum: ["low", "medium", "high"],
+      description: "The analyzed risk level: 'high' for clear signs of scam/fraud/phishing/impersonation/too-good-to-be-true/OTP requests; 'medium' for suspicious, urgent or highly misleading elements; 'low' if no obvious risks are found.",
+    },
+    riskReason: {
+      type: SchemaType.STRING,
+      description: "A short 1-2 sentence explanation of why it was assigned that risk level. Must be empty string if riskLevel is 'low' and no notable issues were found.",
+    },
+  },
+  required: ["explanation", "riskLevel", "riskReason"],
+};
 
 export async function POST(request: Request) {
   try {
@@ -15,6 +47,7 @@ export async function POST(request: Request) {
     }
 
     const { text } = body;
+    let { tone } = body;
 
     if (!text || typeof text !== "string" || text.trim() === "") {
       return NextResponse.json(
@@ -30,6 +63,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!tone || typeof tone !== "string" || !SYSTEM_INSTRUCTIONS[tone.toLowerCase()]) {
+      tone = "simple";
+    }
+
+    const normalizedTone = tone.toLowerCase();
+    const systemInstruction = SYSTEM_INSTRUCTIONS[normalizedTone];
+
     // 2. Check for API key configuration
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -44,32 +84,60 @@ export async function POST(request: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      systemInstruction: "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Explain like you're talking to an elderly person or a student who has no background knowledge. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text.",
+      systemInstruction: systemInstruction,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: RESPONSE_SCHEMA,
+      },
     });
 
-    const prompt = `Please simplify and explain the following text. Make it easy to understand, warm, and clear:
+    const prompt = `Please carefully analyze the following text. You have two main tasks:
+1. Simplify and explain the text clearly according to your system instructions for the requested tone.
+2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 
+Text to analyze:
 """
 ${text}
-"""
-
-Simple Explanation:`;
+"""`;
 
     // 4. Generate content from Gemini API
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const explanation = response.text();
+    const responseText = response.text();
 
-    if (!explanation) {
-      throw new Error("Empty explanation returned from Gemini API");
+    if (!responseText) {
+      throw new Error("Empty response returned from Gemini API");
+    }
+
+    // Try parsing the response as JSON
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Failed to parse Gemini response as JSON:", responseText, parseError);
+      return NextResponse.json(
+        { error: "We couldn't analyze this text right now. Please try again in a moment." },
+        { status: 500 }
+      );
+    }
+
+    const { explanation, riskLevel, riskReason } = parsedResponse;
+
+    // Validate properties
+    if (!explanation || !riskLevel || typeof riskReason !== "string") {
+      throw new Error("Response JSON does not contain all required fields");
     }
 
     // 5. Return success response
-    return NextResponse.json({ explanation });
+    return NextResponse.json({
+      explanation,
+      riskLevel,
+      riskReason,
+    });
   } catch (error) {
     console.error("Error in /api/explain:", error);
     return NextResponse.json(
-      { error: "We couldn't simplify this text right now. Please try again in a moment." },
+      { error: "We couldn't analyze this text right now. Please try again in a moment." },
       { status: 500 }
     );
   }

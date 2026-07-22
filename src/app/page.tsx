@@ -2,9 +2,19 @@
 
 import React, { useState } from "react";
 
+const TONES = [
+  { id: "simple", label: "Simple" },
+  { id: "student", label: "Student" },
+  { id: "teacher", label: "Teacher" },
+  { id: "elderly-friendly", label: "Elderly-friendly" },
+];
+
 export default function Home() {
   const [inputText, setInputText] = useState("");
   const [explanation, setExplanation] = useState("");
+  const [riskLevel, setRiskLevel] = useState("");
+  const [riskReason, setRiskReason] = useState("");
+  const [selectedTone, setSelectedTone] = useState("simple");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -25,6 +35,8 @@ export default function Home() {
     setIsLoading(true);
     setError("");
     setExplanation("");
+    setRiskLevel("");
+    setRiskReason("");
 
     try {
       const response = await fetch("/api/explain", {
@@ -32,7 +44,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text: inputText }),
+        body: JSON.stringify({ text: inputText, tone: selectedTone }),
       });
 
       const data = await response.json();
@@ -42,6 +54,8 @@ export default function Home() {
       }
 
       setExplanation(data.explanation);
+      setRiskLevel(data.riskLevel || "low");
+      setRiskReason(data.riskReason || "");
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof Error) {
@@ -58,7 +72,12 @@ export default function Home() {
   const handleCopy = async () => {
     if (!explanation) return;
     try {
-      await navigator.clipboard.writeText(explanation);
+      let textToCopy = explanation;
+      if (riskLevel === "medium" || riskLevel === "high") {
+        const formattedRisk = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1);
+        textToCopy = `Risk: ${formattedRisk}\nReason: ${riskReason}\n\nExplanation:\n${explanation}`;
+      }
+      await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -70,6 +89,8 @@ export default function Home() {
   const handleReset = () => {
     setInputText("");
     setExplanation("");
+    setRiskLevel("");
+    setRiskReason("");
     setError("");
     setIsLoading(false);
   };
@@ -77,6 +98,8 @@ export default function Home() {
   // Custom text renderer to format bullet points and paragraphs securely
   const renderExplanation = (text: string) => {
     const blocks = text.split(/\n\s*\n/);
+    const isElderly = selectedTone === "elderly-friendly";
+
     return blocks.map((block, index) => {
       const trimmed = block.trim();
       if (!trimmed) return null;
@@ -95,7 +118,11 @@ export default function Home() {
 
       if (isList) {
         return (
-          <ul key={index} className="list-disc pl-6 mb-4 space-y-2 text-base text-[#0F172A]">
+          <ul
+            key={index}
+            className={`list-disc pl-6 mb-4 space-y-2 text-[#0F172A]`}
+            style={isElderly ? { fontSize: "18px", lineHeight: "1.6" } : undefined}
+          >
             {lines.map((line, lIndex) => {
               // Strip list indicator
               const content = line.replace(/^[\s*-]+|^\d+\.\s*/, "").trim();
@@ -110,7 +137,11 @@ export default function Home() {
       }
 
       return (
-        <p key={index} className="text-base text-[#0F172A] leading-relaxed mb-4">
+        <p
+          key={index}
+          className={`leading-relaxed mb-4 text-[#0F172A]`}
+          style={isElderly ? { fontSize: "18px", lineHeight: "1.6" } : undefined}
+        >
           {trimmed}
         </p>
       );
@@ -134,7 +165,36 @@ export default function Home() {
 
         {/* Form and Input Area */}
         <main className="w-full space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* Tone Selector */}
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-semibold text-[#475569] uppercase tracking-wider">
+                Audience Tone
+              </span>
+              <div className="inline-flex p-1 bg-white border border-[#E2E8F0] rounded-full shadow-sm gap-1 max-w-full overflow-x-auto scrollbar-none">
+                {TONES.map((tone) => {
+                  const isActive = selectedTone === tone.id;
+                  return (
+                    <button
+                      key={tone.id}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => setSelectedTone(tone.id)}
+                      className={`px-3.5 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-150 whitespace-nowrap ${
+                        isActive
+                          ? "bg-[#0D9488] text-white shadow-sm"
+                          : "text-[#475569] hover:bg-[#F4F6F9] hover:text-[#0F172A] disabled:opacity-50"
+                      }`}
+                    >
+                      {tone.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Input Textarea Wrapper */}
             <div className="relative bg-white rounded-2xl border border-[#E2E8F0] shadow-sm focus-within:ring-2 focus-within:ring-[#0D9488] focus-within:border-transparent transition duration-150">
               <label htmlFor="inputText" className="sr-only">
                 Confusing text input
@@ -171,7 +231,7 @@ export default function Home() {
             {error && (
               <div
                 role="alert"
-                className="p-4 bg-[#FEF2F2] border border-[#991B1B]/10 rounded-xl flex flex-col gap-1"
+                className="p-4 bg-[#FEF2F2] border border-[#991B1B]/10 rounded-xl flex flex-col gap-1 animate-fade-in"
               >
                 <span className="text-sm font-bold text-[#991B1B]">Error</span>
                 <p className="text-sm text-[#991B1B] font-medium">{error}</p>
@@ -209,7 +269,9 @@ export default function Home() {
           {/* Result Card Display */}
           {explanation && (
             <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md p-6 md:p-8 space-y-6 transition-all duration-300">
-              <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+
+              {/* Header section with Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
                 <h2 className="text-xl md:text-2xl font-bold text-[#0F172A]">
                   Simple Explanation
                 </h2>
@@ -218,7 +280,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition duration-150 flex items-center gap-2 ${
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition duration-150 flex items-center gap-2 self-start sm:self-auto ${
                     copied
                       ? "bg-[#0D9488]/10 text-[#0D9488]"
                       : "bg-[#F4F6F9] text-[#475569] hover:bg-[#E2E8F0] hover:text-[#0F172A]"
@@ -240,6 +302,50 @@ export default function Home() {
                     </>
                   )}
                 </button>
+              </div>
+
+              {/* Risk Badge & Callout Section - Top of the card, above explanation text */}
+              <div className="flex flex-col gap-3">
+                {riskLevel === "low" && (
+                  <div className="flex">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#ECFDF5] text-[#065F46] border border-[#065F46]/10">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#065F46]" />
+                      No obvious risk detected
+                    </span>
+                  </div>
+                )}
+
+                {riskLevel === "medium" && (
+                  <div className="space-y-2">
+                    <div className="flex">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#FFFBEB] text-[#92400E] border border-[#92400E]/15">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#92400E]" />
+                        Medium Risk
+                      </span>
+                    </div>
+                    {riskReason && (
+                      <div className="p-3.5 bg-[#FFFBEB] border border-[#92400E]/15 text-[#92400E] rounded-xl text-xs md:text-sm font-medium leading-relaxed">
+                        {riskReason}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {riskLevel === "high" && (
+                  <div className="space-y-2">
+                    <div className="flex">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#FEF2F2] text-[#991B1B] border border-[#991B1B]/15">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#991B1B]" />
+                        High Risk
+                      </span>
+                    </div>
+                    {riskReason && (
+                      <div className="p-3.5 bg-[#FEF2F2] border border-[#991B1B]/15 text-[#991B1B] rounded-xl text-xs md:text-sm font-medium leading-relaxed">
+                        {riskReason}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Explanation Content */}
