@@ -38,8 +38,18 @@ const RESPONSE_SCHEMA: Schema = {
       },
       description: "An array of short strings pointing out personal emotional/pressure manipulation tactics if detected (e.g., guilt-tripping language, fear/urgency pressure, emotional manipulation, controlling language from personal or professional senders like family/bosses/partners/friends). Keep flags under 10 words, concise, non-judgmental, and descriptive of observed patterns. Return empty array if none are detected.",
     },
+    confidenceLevel: {
+      type: SchemaType.STRING,
+      format: "enum",
+      enum: ["high", "medium", "low"],
+      description: "The analyzed confidence level of the AI's explanation: 'high', 'medium', or 'low'.",
+    },
+    confidenceNote: {
+      type: SchemaType.STRING,
+      description: "A short 1 sentence explanation of why confidence is at that level. Gently suggest consulting a professional (like lawyer, doctor, accountant, etc.) if confidenceLevel is 'low'.",
+    },
   },
-  required: ["explanation", "riskLevel", "riskReason", "manipulationFlags"],
+  required: ["explanation", "riskLevel", "riskReason", "manipulationFlags", "confidenceLevel", "confidenceNote"],
 };
 
 export async function POST(request: Request) {
@@ -162,10 +172,15 @@ export async function POST(request: Request) {
           ? extractedText.substring(0, 150000) + "\n\n[Truncated due to length]"
           : extractedText;
 
-        const prompt = `Please carefully analyze the following text extracted from a PDF. You have three main tasks:
+        const prompt = `Please carefully analyze the following text extracted from a PDF. You have four main tasks:
 1. Simplify and explain the text clearly according to your system instructions for the requested tone.
 2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
+4. Assess your own confidence level in explaining this text accurately, and provide a short 1-sentence note explanation of why confidence is at that level:
+   - HIGH: the text is a common, well-understood type of document/message (standard contract language, common scam patterns, typical bills/notices, everyday messages)
+   - MEDIUM: the text is understandable but has some ambiguous, unusual, or context-dependent parts
+   - LOW: the text is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
+   - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
 
 Text to analyze:
 """
@@ -187,10 +202,15 @@ ${finalPdfText}
           },
         };
 
-        const prompt = `Please carefully analyze the attached image. You have three main tasks:
+        const prompt = `Please carefully analyze the attached image. You have four main tasks:
 1. Simplify and explain the text or visual content clearly according to your system instructions for the requested tone.
 2. Analyze the content for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
-3. Analyze the content for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).`;
+3. Analyze the content for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
+4. Assess your own confidence level in explaining this text/image accurately, and provide a short 1-sentence note explanation of why confidence is at that level:
+   - HIGH: the text/image is a common, well-understood type of document/message (standard contract language, common scam patterns, typical bills/notices, everyday messages)
+   - MEDIUM: the text/image is understandable but has some ambiguous, unusual, or context-dependent parts
+   - LOW: the text/image is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
+   - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.`;
 
         result = await model.generateContent([prompt, imagePart]);
       }
@@ -212,10 +232,15 @@ ${finalPdfText}
         );
       }
 
-      const prompt = `Please carefully analyze the following text. You have three main tasks:
+      const prompt = `Please carefully analyze the following text. You have four main tasks:
 1. Simplify and explain the text clearly according to your system instructions for the requested tone.
 2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
+4. Assess your own confidence level in explaining this text accurately, and provide a short 1-sentence note explanation of why confidence is at that level:
+   - HIGH: the text is a common, well-understood type of document/message (standard contract language, common scam patterns, typical bills/notices, everyday messages)
+   - MEDIUM: the text is understandable but has some ambiguous, unusual, or context-dependent parts
+   - LOW: the text is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
+   - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
 
 Text to analyze:
 """
@@ -245,10 +270,10 @@ ${text}
       );
     }
 
-    const { explanation, riskLevel, riskReason, manipulationFlags } = parsedResponse;
+    const { explanation, riskLevel, riskReason, manipulationFlags, confidenceLevel, confidenceNote } = parsedResponse;
 
     // Validate properties
-    if (!explanation || !riskLevel || typeof riskReason !== "string" || !Array.isArray(manipulationFlags)) {
+    if (!explanation || !riskLevel || typeof riskReason !== "string" || !Array.isArray(manipulationFlags) || !confidenceLevel || typeof confidenceNote !== "string") {
       throw new Error("Response JSON does not contain all required fields");
     }
 
@@ -265,6 +290,7 @@ ${text}
           input_type: inputType,
           tone_mode: toneMode,
           risk_level: riskLevel,
+          confidence_level: confidenceLevel,
         });
 
         if (dbError) {
@@ -283,6 +309,8 @@ ${text}
       riskLevel,
       riskReason,
       manipulationFlags,
+      confidenceLevel,
+      confidenceNote,
       ...(pdfPageCount !== null ? { pdfPageCount } : {}),
     });
 
