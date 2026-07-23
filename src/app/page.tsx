@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ClarioLogo } from "./ClarioLogo";
+import { Header } from "./Header";
 import { ClarioDivider } from "./ClarioDivider";
 import { ClarioHero } from "./ClarioHero";
+import { supabaseClient } from "@/lib/supabaseClient";
+import { User } from "@supabase/supabase-js";
 
 const TONES = [
   { id: "simple", label: "Simple" },
@@ -13,6 +15,8 @@ const TONES = [
 ];
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
+
   const [inputMode, setInputMode] = useState<"text" | "file">("text");
   const [inputText, setInputText] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -44,6 +48,103 @@ export default function Home() {
       }
     };
   }, [imagePreviewUrl]);
+
+  // Handle shared history load
+  useEffect(() => {
+    try {
+      const sharedItemStr = sessionStorage.getItem("clario_view_history");
+      if (sharedItemStr) {
+        const item = JSON.parse(sharedItemStr);
+        // Populate output states
+        setExplanation(item.explanation_text);
+        setRiskLevel(item.risk_level || "low");
+        setRiskReason(item.risk_reason || "");
+        setManipulationFlags(item.manipulation_flags || []);
+        setConfidenceLevel(item.confidence_level || "high");
+        setConfidenceNote(item.confidence_note || "");
+        setSelectedTone(item.tone_mode || "simple");
+
+        // Set input state preview info
+        if (item.input_type === "pdf") {
+          setInputMode("file");
+          setSelectedFile(new File([], "document_saved_history.pdf", { type: "application/pdf" }));
+          setPdfPageCount(1);
+        } else if (item.input_type === "image") {
+          setInputMode("file");
+          setSelectedFile(new File([], "image_saved_history.png", { type: "image/png" }));
+        } else {
+          setInputMode("text");
+          setInputText("Explanation loaded from saved history.");
+        }
+
+        // Smooth scroll to output display
+        setTimeout(() => {
+          const resultCard = document.getElementById("result-card-display");
+          if (resultCard) {
+            resultCard.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+
+        // Clear sessionStorage so it doesn't linger on refresh
+        sessionStorage.removeItem("clario_view_history");
+      }
+    } catch (err) {
+      console.error("Failed to load shared history:", err);
+    }
+  }, []);
+
+  // Sync / Fetch Tone preference when user is logged in
+  useEffect(() => {
+    const client = supabaseClient;
+    if (!client || !user) return;
+
+    const fetchPreference = async () => {
+      try {
+        const { data, error: prefErr } = await client
+          .from("profiles")
+          .select("preferred_tone")
+          .eq("user_id", user.id)
+          .single();
+
+        if (prefErr) {
+          // No profile row yet, which is expected for brand new signups
+          if (prefErr.code !== "PGRST116") {
+            console.error("Failed to fetch preference:", prefErr.message);
+          }
+          return;
+        }
+
+        if (data?.preferred_tone) {
+          setSelectedTone(data.preferred_tone);
+        }
+      } catch (err) {
+        console.error("Error checking preference:", err);
+      }
+    };
+
+    fetchPreference();
+  }, [user]);
+
+  // Handle Tone Selection change with auto-upsert for logged-in users
+  const handleToneChange = async (toneId: string) => {
+    setSelectedTone(toneId);
+
+    const client = supabaseClient;
+    if (user && client) {
+      try {
+        const { error: upsertErr } = await client.from("profiles").upsert({
+          user_id: user.id,
+          preferred_tone: toneId,
+        });
+
+        if (upsertErr) {
+          console.error("Failed to save preferred tone:", upsertErr.message);
+        }
+      } catch (err) {
+        console.error("Error upserting preference:", err);
+      }
+    }
+  };
 
   // Handle Input Change
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -203,6 +304,37 @@ export default function Home() {
       if (data.pdfPageCount !== undefined) {
         setPdfPageCount(data.pdfPageCount);
       }
+
+      // Save to history in background if user is logged in (Feature 2)
+      const client = supabaseClient;
+      if (user && client) {
+        const resolvedInputType = inputMode === "file" && selectedFile
+          ? (selectedFile.name.toLowerCase().endsWith(".pdf") ? "pdf" : "image")
+          : "text";
+
+        (async () => {
+          try {
+            const { error: histErr } = await client
+              .from("explanation_history")
+              .insert({
+                user_id: user.id,
+                input_type: resolvedInputType,
+                tone_mode: selectedTone,
+                explanation_text: data.explanation,
+                risk_level: data.riskLevel || "low",
+                risk_reason: data.riskReason || null,
+                manipulation_flags: data.manipulationFlags || null,
+                confidence_level: data.confidenceLevel || "high",
+              });
+            if (histErr) {
+              console.error("Non-blocking save to history failed:", histErr.message);
+            }
+          } catch (err) {
+            console.error("Error executing background save to history:", err);
+          }
+        })();
+      }
+
     } catch (err: unknown) {
       console.error(err);
       if (err instanceof Error) {
@@ -333,22 +465,6 @@ export default function Home() {
     isLoading ||
     (inputMode === "text" ? !inputText.trim() : !selectedFile);
 
-  const scrollToTool = () => {
-    const element = document.getElementById("workspace-tool");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setTimeout(() => {
-        const textarea = document.getElementById("inputText");
-        const fileBtn = document.getElementById("fileInput");
-        if (textarea) {
-          textarea.focus();
-        } else if (fileBtn) {
-          fileBtn.focus();
-        }
-      }, 500);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#F4F6F9] text-[#0F172A] font-sans transition-colors duration-200">
       {/* Hidden Print Template container for jsPDF + html2canvas */}
@@ -371,7 +487,7 @@ export default function Home() {
           {/* Header/Logo */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #E2E8F0", paddingBottom: "20px", marginBottom: "30px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {/* Inline SVG Logo Mark: The Resolved Loop (recreated for the high-contrast print template) */}
+              {/* Inline SVG Logo Mark: The Resolved Loop */}
               <svg
                 style={{ height: "36px", width: "54px" }}
                 viewBox="0 0 48 32"
@@ -585,20 +701,7 @@ export default function Home() {
       )}
 
       {/* Sleek Navigation Bar */}
-      <nav className="w-full bg-white/80 backdrop-blur-md border-b border-[#E2E8F0] sticky top-0 z-50 py-3.5 px-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ClarioLogo size="sm" />
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={scrollToTool}
-            className="px-4 py-2 bg-[#0D9488]/10 text-[#0F766E] hover:bg-[#0D9488]/15 rounded-xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] focus-visible:ring-offset-2"
-          >
-            Try the Tool
-          </button>
-        </div>
-      </nav>
+      <Header onSessionChange={(currentUser) => setUser(currentUser)} currentPage="home" />
 
       {/* Distinctive Hero Section with Hybrid Fusion Slider */}
       <ClarioHero />
@@ -624,7 +727,7 @@ export default function Home() {
                       key={tone.id}
                       type="button"
                       disabled={isLoading}
-                      onClick={() => setSelectedTone(tone.id)}
+                      onClick={() => handleToneChange(tone.id)}
                       className={`px-3.5 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
                         isActive
                           ? "bg-[#0D9488] text-white shadow-sm"
@@ -750,7 +853,7 @@ export default function Home() {
                             {selectedFile.name}
                           </p>
                           <p className="text-xs text-[#334155] font-semibold mt-0.5">
-                            {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                            {selectedFile.size > 0 ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB` : "Saved PDF/Image"}
                           </p>
                           {pdfPageCount !== null && (
                             <p className="text-xs text-[#0D9488] font-bold mt-1 inline-flex items-center gap-1 animate-fade-in">
@@ -933,7 +1036,7 @@ export default function Home() {
 
           {/* Result Card Display */}
           {explanation && !isLoading && (
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md p-6 md:p-8 space-y-6 transition-all duration-300 animate-fade-in">
+            <div id="result-card-display" className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md p-6 md:p-8 space-y-6 transition-all duration-300 animate-fade-in">
 
               {/* Header section with Actions */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
@@ -1042,7 +1145,7 @@ export default function Home() {
                     ) : (
                       <>
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002-2H8a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                         </svg>
                         Copy Explanation
                       </>
@@ -1157,7 +1260,7 @@ export default function Home() {
                 {manipulationFlags && manipulationFlags.length > 0 && (
                   <div className="p-4 bg-[#F3E8FF]/40 border border-[#6B21A8]/15 text-[#6B21A8] rounded-xl text-xs md:text-sm font-semibold leading-relaxed space-y-2">
                     <p className="font-extrabold tracking-wide uppercase text-[10px] text-[#6B21A8]/85">
-                      Observed Patterns:
+                      Observed Tactics:
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
                       {manipulationFlags.map((flag, flagIdx) => (
@@ -1278,7 +1381,32 @@ export default function Home() {
         <footer className="w-full flex flex-col items-center text-center gap-8 pt-4 pb-12">
           {/* Visual closing anchor using the larger logo mark */}
           <div className="flex items-center justify-center">
-            <ClarioLogo size="lg" />
+            {/* Logo directly styled for exact footer balance */}
+            <svg
+              className="h-10 w-15 md:h-12 md:w-18 mx-auto hover:scale-105 transition-transform duration-200"
+              viewBox="0 0 48 32"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              {/* Slate Loop */}
+              <path
+                d="M 6 18 C 6 10, 13 6, 17 6 C 23 6, 23 20, 17 20 C 13 20, 10 16, 10 12 C 10 8, 14 6, 18 8"
+                stroke="#0F172A"
+                strokeWidth="3.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Teal Sweep */}
+              <path
+                d="M 18 8 C 22 10, 26 24, 34 24 C 39 24, 42 18, 42 12"
+                stroke="#0D9488"
+                strokeWidth="3.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="42" cy="12" r="3.2" fill="#0D9488" />
+            </svg>
           </div>
 
           {/* Core Brand Promise / Privacy Statement */}
@@ -1287,7 +1415,13 @@ export default function Home() {
               How It Works &amp; Privacy
             </h2>
             <p className="text-[#334155] text-base md:text-lg leading-relaxed font-medium">
-              Clario is a secure, compassionate reading assistant designed to turn confusing documents into plain language. Your privacy is our priority: we only log anonymous usage metrics, and your text, documents, or personal data are never saved or stored. Simply paste text, drag in a document, or snap a photo to begin.
+              Clario is a secure, compassionate reading assistant designed to turn confusing documents into plain language.
+            </p>
+            <p className="text-[#334155] text-sm md:text-base leading-relaxed font-semibold">
+              <span className="font-extrabold text-[#0D9488]">For Guest Users:</span> Complete privacy. Your texts, uploaded documents, and results are processed in real-time, never saved or stored, and we only track anonymous non-identifying metrics to keep Clario running beautifully.
+            </p>
+            <p className="text-[#334155] text-sm md:text-base leading-relaxed font-semibold">
+              <span className="font-extrabold text-[#0D9488]">For Logged-In Users:</span> Custom convenience. Accounts are entirely optional. If you choose to sign up, Clario stores your generated explanations (never the original inputs/files) in your private, secure history list so you can access, copy, and download them anytime. Your history is fully private, protected by Row Level Security (RLS), and you can delete any entry permanently whenever you wish.
             </p>
           </div>
 
