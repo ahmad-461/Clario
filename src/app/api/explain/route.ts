@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI, SchemaType, Schema } from "@google/generative-ai";
 import { PDFParse } from "pdf-parse";
 import { supabase } from "@/lib/supabase";
+import { join } from "path";
 
 const SYSTEM_INSTRUCTIONS: Record<string, string> = {
   simple:
@@ -176,6 +177,9 @@ export async function POST(request: Request) {
 
         let pdfTextResult;
         try {
+          const workerPath = join(process.cwd(), "node_modules", "pdfjs-dist", "legacy", "build", "pdf.worker.mjs");
+          PDFParse.setWorker(workerPath);
+
           const parser = new PDFParse({ data: buffer });
           pdfTextResult = await parser.getText();
         } catch (pdfErr) {
