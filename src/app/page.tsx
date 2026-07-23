@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { ClarioLogo } from "./ClarioLogo";
+import { ClarioDivider } from "./ClarioDivider";
 
 const TONES = [
   { id: "simple", label: "Simple" },
@@ -351,21 +353,34 @@ export default function Home() {
         >
           {/* Header/Logo */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #E2E8F0", paddingBottom: "20px", marginBottom: "30px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {/* Inline SVG Logo Mark: The Resolved Loop (recreated for the high-contrast print template) */}
               <svg
-                style={{ height: "36px", width: "36px", color: "#0D9488" }}
+                style={{ height: "36px", width: "54px" }}
+                viewBox="0 0 48 32"
                 fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
+                xmlns="http://www.w3.org/2000/svg"
               >
+                {/* Tangled / Confused Loop (Slate-900 / #0F172A) */}
                 <path
+                  d="M 6 18 C 6 10, 13 6, 17 6 C 23 6, 23 20, 17 20 C 13 20, 10 16, 10 12 C 10 8, 14 6, 18 8"
+                  stroke="#0F172A"
+                  strokeWidth="3.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
                 />
+                {/* Resolved Sweep (Teal-600 / #0D9488) */}
+                <path
+                  d="M 18 8 C 22 10, 26 24, 34 24 C 39 24, 42 18, 42 12"
+                  stroke="#0D9488"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                {/* Core Dot (Teal-600 / #0D9488) */}
+                <circle cx="42" cy="12" r="3.2" fill="#0D9488" />
               </svg>
-              <span style={{ fontSize: "28px", fontWeight: "900", color: "#0F172A", letterSpacing: "-0.05em" }}>Clario</span>
+              <span style={{ fontSize: "28px", fontWeight: "600", color: "#0F172A", letterSpacing: "0.05em" }}>Clario</span>
             </div>
             <div style={{ fontSize: "14px", fontWeight: "700", color: "#475569" }}>
               Date: {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -557,24 +572,8 @@ export default function Home() {
 
         {/* Header Section */}
         <header className="text-center space-y-3">
-          <div className="flex items-center justify-center gap-2.5">
-            <svg
-              className="h-9 w-9 text-[#0D9488]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
-              />
-            </svg>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[#0F172A]">
-              Clario
-            </h1>
+          <div className="flex items-center justify-center">
+            <ClarioLogo size="sm" />
           </div>
           <p className="text-lg md:text-xl text-[#334155] font-semibold max-w-md mx-auto leading-relaxed">
             Confusing documents and complex text, explained simply.
@@ -1161,38 +1160,30 @@ export default function Home() {
           )}
         </main>
 
-        {/* How it works / About box */}
-        <section className="bg-white border border-[#E2E8F0] rounded-2xl p-6 md:p-8 shadow-sm space-y-4">
-          <h2 className="text-lg font-bold text-[#0F172A] flex items-center gap-2">
-            <svg
-              className="h-5 w-5 text-[#0D9488]"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2.25"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M11.25 11.25l.041-.02a.75.75 0 111.084 1.085l-.26.26m0 0a1.5 1.5 0 10-2.23 2.23l.26-.26m0 0V15.75m1.125-12.75h7.5c.621 0 1.125.504 1.125 1.125v15c0 .621-.504 1.125-1.125 1.125h-15A1.125 1.125 0 013 18.75v-15c0-.621.504-1.125 1.125-1.125h7.5"
-              />
-            </svg>
-            How it works & Privacy
-          </h2>
-          <p className="text-[#334155] text-sm md:text-base leading-relaxed font-medium">
-            Clario is a secure, compassionate reading assistant designed to turn confusing documents into plain language. Your privacy is our priority: we only log anonymous usage metrics, and your text, documents, or personal data are never saved or stored. Simply paste text, drag in a document, or snap a photo to begin.
-          </p>
-        </section>
+        {/* Threshold Divider */}
+        <ClarioDivider className="my-2" />
 
-        {/* Footer Section */}
-        <footer className="text-center pt-4 border-t border-[#E2E8F0] space-y-1">
-          <p className="text-sm font-bold text-[#0F172A]">
-            Clario
-          </p>
-          <p className="text-xs text-[#334155] font-semibold">
-            Empowering reading with clarity, compassion, and absolute privacy.
-          </p>
+        {/* Footer Section: Redesigned as a Confident Closing Statement */}
+        <footer className="w-full flex flex-col items-center text-center gap-8 pt-4 pb-12">
+          {/* Visual closing anchor using the larger logo mark */}
+          <div className="flex items-center justify-center">
+            <ClarioLogo size="lg" />
+          </div>
+
+          {/* Core Brand Promise / Privacy Statement */}
+          <div className="max-w-xl mx-auto space-y-4">
+            <h2 className="text-xs font-bold tracking-widest text-[#0D9488] uppercase">
+              How It Works &amp; Privacy
+            </h2>
+            <p className="text-[#334155] text-base md:text-lg leading-relaxed font-medium">
+              Clario is a secure, compassionate reading assistant designed to turn confusing documents into plain language. Your privacy is our priority: we only log anonymous usage metrics, and your text, documents, or personal data are never saved or stored. Simply paste text, drag in a document, or snap a photo to begin.
+            </p>
+          </div>
+
+          {/* Subtly presented bottom footer line */}
+          <div className="pt-6 border-t border-[#E2E8F0]/50 w-full text-xs text-[#334155]/80 font-semibold tracking-wide">
+            &copy; {new Date().getFullYear()} Clario. Empowering reading with clarity, compassion, and absolute privacy.
+          </div>
         </footer>
 
       </div>
