@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ClarioLogo } from "./ClarioLogo";
 import { ClarioDivider } from "./ClarioDivider";
+import { ClarioHero } from "./ClarioHero";
 
 const TONES = [
   { id: "simple", label: "Simple" },
@@ -301,7 +302,7 @@ export default function Home() {
         return (
           <ul
             key={index}
-            className={`list-disc pl-6 mb-4 space-y-2 text-[#0F172A]`}
+            className="list-disc pl-6 mb-4 space-y-2 text-[#0F172A]"
             style={isElderly ? { fontSize: "18px", lineHeight: "1.6" } : undefined}
           >
             {lines.map((line, lIndex) => {
@@ -319,7 +320,7 @@ export default function Home() {
       return (
         <p
           key={index}
-          className={`leading-relaxed mb-4 text-[#0F172A]`}
+          className="leading-relaxed mb-4 text-[#0F172A]"
           style={isElderly ? { fontSize: "18px", lineHeight: "1.6" } : undefined}
         >
           {trimmed}
@@ -331,6 +332,22 @@ export default function Home() {
   const isSubmitDisabled =
     isLoading ||
     (inputMode === "text" ? !inputText.trim() : !selectedFile);
+
+  const scrollToTool = () => {
+    const element = document.getElementById("workspace-tool");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+      setTimeout(() => {
+        const textarea = document.getElementById("inputText");
+        const fileBtn = document.getElementById("fileInput");
+        if (textarea) {
+          textarea.focus();
+        } else if (fileBtn) {
+          fileBtn.focus();
+        }
+      }, 500);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F4F6F9] text-[#0F172A] font-sans transition-colors duration-200">
@@ -383,7 +400,7 @@ export default function Home() {
               <span style={{ fontSize: "28px", fontWeight: "600", color: "#0F172A", letterSpacing: "0.05em" }}>Clario</span>
             </div>
             <div style={{ fontSize: "14px", fontWeight: "700", color: "#475569" }}>
-              Date: {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+              Date: {new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}
             </div>
           </div>
 
@@ -567,20 +584,30 @@ export default function Home() {
         </div>
       )}
 
-      {/* Container */}
-      <div className="max-w-2xl w-full mx-auto px-4 py-8 md:py-16 flex flex-col gap-8">
+      {/* Sleek Navigation Bar */}
+      <nav className="w-full bg-white/80 backdrop-blur-md border-b border-[#E2E8F0] sticky top-0 z-50 py-3.5 px-6 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ClarioLogo size="sm" />
+        </div>
+        <div>
+          <button
+            type="button"
+            onClick={scrollToTool}
+            className="px-4 py-2 bg-[#0D9488]/10 text-[#0F766E] hover:bg-[#0D9488]/15 rounded-xl text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] focus-visible:ring-offset-2"
+          >
+            Try the Tool
+          </button>
+        </div>
+      </nav>
 
-        {/* Header Section */}
-        <header className="text-center space-y-3">
-          <div className="flex items-center justify-center">
-            <ClarioLogo size="sm" />
-          </div>
-          <p className="text-lg md:text-xl text-[#334155] font-semibold max-w-md mx-auto leading-relaxed">
-            Confusing documents and complex text, explained simply.
-          </p>
-        </header>
+      {/* Distinctive Hero Section with Hybrid Fusion Slider */}
+      <ClarioHero />
 
-        {/* Form and Input Area */}
+      {/* Main Workspace Workspace Container */}
+      <div
+        id="workspace-tool"
+        className="max-w-2xl w-full mx-auto px-4 py-12 scroll-mt-20 flex flex-col gap-10"
+      >
         <main className="w-full space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -1159,6 +1186,90 @@ export default function Home() {
             </div>
           )}
         </main>
+
+        {/* Grounded Showcase Features */}
+        <section className="mt-12 border-t border-[#E2E8F0] pt-16 space-y-12">
+          <div className="text-center space-y-2">
+            <h3 className="text-xs font-bold tracking-widest text-[#0D9488] uppercase">
+              Clario in Action
+            </h3>
+            <h2 className="text-2xl md:text-3xl font-display font-medium text-[#0F172A]">
+              Grounded in Trust, Safety, and Clarity
+            </h2>
+            <p className="text-[#475569] text-sm md:text-base max-w-xl mx-auto font-semibold">
+              Explore how our compassionate assistant identifies hidden dangers and translates text to protect you.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: Risk & Scam Detection */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="p-3 bg-red-50 text-[#C5221F] w-fit rounded-xl">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-bold text-[#0F172A]">Deception &amp; Scam Detection</h4>
+                <p className="text-[#475569] text-xs md:text-sm leading-relaxed font-semibold">
+                  Clario scans inputs for manipulative psychological cues, artificial urgency, and liability traps. It immediately displays a clear, high-contrast risk assessment badge.
+                </p>
+              </div>
+              <div className="mt-6 p-3 bg-red-50/50 border border-red-100/50 rounded-xl flex flex-col gap-1.5">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#FCE8E6] text-[#C5221F] w-fit">
+                  ⚠️ High Risk Flagged
+                </span>
+                <p className="text-[11px] font-bold text-[#7F1D1D] leading-normal">
+                  &ldquo;This message uses false urgency (&apos;act within 24 hours&apos;) to force a hasty financial signature.&rdquo;
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2: Custom Multi-Audience Tone Adaptation */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="p-3 bg-teal-50 text-[#0D9488] w-fit rounded-xl">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-bold text-[#0F172A]">Custom Tone Adaptations</h4>
+                <p className="text-[#475569] text-xs md:text-sm leading-relaxed font-semibold">
+                  Tailor explanations to different audiences. Our unique Elderly-Friendly mode scales up explanation text dynamically to 18px with 1.6x line spacing to prevent shifts and maintain perfect visual clarity.
+                </p>
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-2 text-center text-[11px] font-extrabold">
+                <span className="bg-[#F0FDFA] text-[#0F766E] py-1.5 px-2 rounded-lg border border-[#0D9488]/10">👵 Elderly Mode</span>
+                <span className="bg-slate-50 text-[#334155] py-1.5 px-2 rounded-lg border border-slate-100">🎓 Student Mode</span>
+                <span className="bg-slate-50 text-[#334155] py-1.5 px-2 rounded-lg border border-slate-100">🏫 Teacher Mode</span>
+                <span className="bg-slate-50 text-[#334155] py-1.5 px-2 rounded-lg border border-slate-100">✨ Simple Mode</span>
+              </div>
+            </div>
+
+            {/* Card 3: 100% Secure & Private by Design */}
+            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="p-3 bg-blue-50 text-blue-600 w-fit rounded-xl">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <h4 className="text-lg font-bold text-[#0F172A]">Compassionate Data Privacy</h4>
+                <p className="text-[#475569] text-xs md:text-sm leading-relaxed font-semibold">
+                  Your documents and text are processed securely and never saved. We only log anonymous usage metrics (metadata like tone selection and confidence levels) to respect your absolute privacy.
+                </p>
+              </div>
+              <div className="mt-6 p-3 bg-blue-50/50 border border-blue-100/50 rounded-xl flex items-center gap-2 justify-center">
+                <svg className="h-4 w-4 text-blue-600 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fillRule="evenodd" d="M2.166 11.37a8 8 0 1015.668 0c-.145-.553-.623-.97-1.18-.97H3.346c-.557 0-1.035.417-1.18.97zM2 10a8 8 0 1116 0 8 8 0 01-16 0z" clipRule="evenodd" />
+                </svg>
+                <span className="text-[11px] font-bold text-blue-800">
+                  Secure non-blocking metadata only
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Threshold Divider */}
         <ClarioDivider className="my-2" />

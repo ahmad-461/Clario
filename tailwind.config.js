@@ -15,6 +15,13 @@ module.exports = {
         clarioBorder: '#E2E8F0',
         clarioErrorBg: '#FEF2F2',
         clarioErrorText: '#991B1B',
+        clarioTealTint: '#F0FDFA',
+        clarioTealDeep: '#0F766E',
+      },
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "monospace"],
+        display: ["var(--font-fraunces)", "serif"],
       },
     },
   },
