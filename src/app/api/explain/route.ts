@@ -5,13 +5,13 @@ import { supabase } from "@/lib/supabase";
 
 const SYSTEM_INSTRUCTIONS: Record<string, string> = {
   simple:
-    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Explain like you're talking to a person who has no background knowledge. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text.",
+    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Explain like you're talking to a person who has no background knowledge. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text. Also check for personal emotional or pressure tactics (like guilt-tripping, controlling language, fear/urgency pressure, or emotional manipulation from friends, partners, family, or bosses).",
   student:
-    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Relate the explanation to a learning context, and use simple examples where helpful. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text.",
+    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Relate the explanation to a learning context, and use simple examples where helpful. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text. Also check for personal emotional or pressure tactics (like guilt-tripping, controlling language, fear/urgency pressure, or emotional manipulation from friends, partners, family, or bosses).",
   teacher:
-    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Use a slightly more structured/informative tone, as if preparing to explain it to a class. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text.",
+    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Use a slightly more structured/informative tone, as if preparing to explain it to a class. Use short paragraphs and clear bullet points. Avoid any jargon, complex terms, or walls of text. Also check for personal emotional or pressure tactics (like guilt-tripping, controlling language, fear/urgency pressure, or emotional manipulation from friends, partners, family, or bosses).",
   "elderly-friendly":
-    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Use extra simple wording, larger implicit warmth, and avoid jargon completely. Use short paragraphs and clear bullet points.",
+    "You are Clario, a compassionate, clear, and highly accessible reading assistant. Your entire purpose is to take confusing, complex, official, or technical text and explain it in extremely simple, plain language. Use extra simple wording, larger implicit warmth, and avoid jargon completely. Use short paragraphs and clear bullet points. Also check for personal emotional or pressure tactics (like guilt-tripping, controlling language, fear/urgency pressure, or emotional manipulation from friends, partners, family, or bosses).",
 };
 
 const RESPONSE_SCHEMA: Schema = {
@@ -31,8 +31,15 @@ const RESPONSE_SCHEMA: Schema = {
       type: SchemaType.STRING,
       description: "A short 1-2 sentence explanation of why it was assigned that risk level. Must be empty string if riskLevel is 'low' and no notable issues were found.",
     },
+    manipulationFlags: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.STRING,
+      },
+      description: "An array of short strings pointing out personal emotional/pressure manipulation tactics if detected (e.g., guilt-tripping language, fear/urgency pressure, emotional manipulation, controlling language from personal or professional senders like family/bosses/partners/friends). Keep flags under 10 words, concise, non-judgmental, and descriptive of observed patterns. Return empty array if none are detected.",
+    },
   },
-  required: ["explanation", "riskLevel", "riskReason"],
+  required: ["explanation", "riskLevel", "riskReason", "manipulationFlags"],
 };
 
 export async function POST(request: Request) {
@@ -155,9 +162,10 @@ export async function POST(request: Request) {
           ? extractedText.substring(0, 150000) + "\n\n[Truncated due to length]"
           : extractedText;
 
-        const prompt = `Please carefully analyze the following text extracted from a PDF. You have two main tasks:
+        const prompt = `Please carefully analyze the following text extracted from a PDF. You have three main tasks:
 1. Simplify and explain the text clearly according to your system instructions for the requested tone.
 2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
+3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
 
 Text to analyze:
 """
@@ -179,9 +187,10 @@ ${finalPdfText}
           },
         };
 
-        const prompt = `Please carefully analyze the attached image. You have two main tasks:
+        const prompt = `Please carefully analyze the attached image. You have three main tasks:
 1. Simplify and explain the text or visual content clearly according to your system instructions for the requested tone.
-2. Analyze the content for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.`;
+2. Analyze the content for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
+3. Analyze the content for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).`;
 
         result = await model.generateContent([prompt, imagePart]);
       }
@@ -203,9 +212,10 @@ ${finalPdfText}
         );
       }
 
-      const prompt = `Please carefully analyze the following text. You have two main tasks:
+      const prompt = `Please carefully analyze the following text. You have three main tasks:
 1. Simplify and explain the text clearly according to your system instructions for the requested tone.
 2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
+3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
 
 Text to analyze:
 """
@@ -235,10 +245,10 @@ ${text}
       );
     }
 
-    const { explanation, riskLevel, riskReason } = parsedResponse;
+    const { explanation, riskLevel, riskReason, manipulationFlags } = parsedResponse;
 
     // Validate properties
-    if (!explanation || !riskLevel || typeof riskReason !== "string") {
+    if (!explanation || !riskLevel || typeof riskReason !== "string" || !Array.isArray(manipulationFlags)) {
       throw new Error("Response JSON does not contain all required fields");
     }
 
@@ -272,6 +282,7 @@ ${text}
       explanation,
       riskLevel,
       riskReason,
+      manipulationFlags,
       ...(pdfPageCount !== null ? { pdfPageCount } : {}),
     });
 
