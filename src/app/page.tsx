@@ -20,10 +20,12 @@ export default function Home() {
   const [explanation, setExplanation] = useState("");
   const [riskLevel, setRiskLevel] = useState("");
   const [riskReason, setRiskReason] = useState("");
+  const [manipulationFlags, setManipulationFlags] = useState<string[]>([]);
   const [selectedTone, setSelectedTone] = useState("simple");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Constants
   const CHARACTER_LIMIT = 5000;
@@ -154,6 +156,7 @@ export default function Home() {
     setExplanation("");
     setRiskLevel("");
     setRiskReason("");
+    setManipulationFlags([]);
 
     try {
       let body: BodyInit;
@@ -184,6 +187,7 @@ export default function Home() {
       setExplanation(data.explanation);
       setRiskLevel(data.riskLevel || "low");
       setRiskReason(data.riskReason || "");
+      setManipulationFlags(data.manipulationFlags || []);
 
       if (data.pdfPageCount !== undefined) {
         setPdfPageCount(data.pdfPageCount);
@@ -204,11 +208,26 @@ export default function Home() {
   const handleCopy = async () => {
     if (!explanation) return;
     try {
-      let textToCopy = explanation;
+      let textToCopy = "";
+
+      // 1. Add Scam Risk
       if (riskLevel === "medium" || riskLevel === "high") {
         const formattedRisk = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1);
-        textToCopy = `Risk: ${formattedRisk}\nReason: ${riskReason}\n\nExplanation:\n${explanation}`;
+        textToCopy += `Risk: ${formattedRisk}\nReason: ${riskReason}\n\n`;
       }
+
+      // 2. Add Manipulation Flags
+      if (manipulationFlags && manipulationFlags.length > 0) {
+        textToCopy += `Manipulation Flags:\n`;
+        manipulationFlags.forEach((flag) => {
+          textToCopy += `- ${flag}\n`;
+        });
+        textToCopy += `\n`;
+      }
+
+      // 3. Add Explanation
+      textToCopy += `Explanation:\n${explanation}`;
+
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -229,6 +248,7 @@ export default function Home() {
     setExplanation("");
     setRiskLevel("");
     setRiskReason("");
+    setManipulationFlags([]);
     setError("");
     setIsLoading(false);
   };
@@ -291,6 +311,192 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F4F6F9] text-[#0F172A] font-sans transition-colors duration-200">
+      {/* Hidden Print Template container for jsPDF + html2canvas */}
+      {explanation && (
+        <div
+          id="clario-pdf-template"
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            top: "-9999px",
+            width: "800px", // Standard width for high-quality single-page / multi-page render
+            backgroundColor: "#FFFFFF",
+            color: "#0F172A",
+            padding: "40px",
+            boxSizing: "border-box",
+            fontFamily: "sans-serif",
+            display: "none",
+          }}
+        >
+          {/* Header/Logo */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #E2E8F0", paddingBottom: "20px", marginBottom: "30px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <svg
+                style={{ height: "36px", width: "36px", color: "#0D9488" }}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                />
+              </svg>
+              <span style={{ fontSize: "28px", fontWeight: "900", color: "#0F172A", letterSpacing: "-0.05em" }}>Clario</span>
+            </div>
+            <div style={{ fontSize: "14px", fontWeight: "700", color: "#475569" }}>
+              Date: {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+          </div>
+
+          {/* Tone Mode used */}
+          <div style={{ marginBottom: "24px" }}>
+            <span style={{ fontSize: "12px", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.1em", color: "#475569", display: "block", marginBottom: "4px" }}>
+              Audience Tone Mode
+            </span>
+            <span style={{ fontSize: "18px", fontWeight: "800", color: "#0D9488" }}>
+              {TONES.find((t) => t.id === selectedTone)?.label || "Simple"} Explanation
+            </span>
+          </div>
+
+          {/* Scam Risk Alert (If Medium or High) */}
+          {(riskLevel === "medium" || riskLevel === "high") && (
+            <div style={{
+              backgroundColor: riskLevel === "high" ? "#FCE8E6" : "#FEF7E0",
+              border: `1.5px solid ${riskLevel === "high" ? "#C5221F" : "#B06000"}`,
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "30px",
+            }}>
+              <span style={{
+                fontSize: "13px",
+                fontWeight: "900",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: riskLevel === "high" ? "#C5221F" : "#B06000",
+                display: "block",
+                marginBottom: "8px"
+              }}>
+                RISK LEVEL: {riskLevel.toUpperCase()}
+              </span>
+              <p style={{
+                fontSize: "15px",
+                fontWeight: "700",
+                lineHeight: "1.5",
+                margin: "0",
+                color: riskLevel === "high" ? "#7F1D1D" : "#78350F"
+              }}>
+                {riskReason}
+              </p>
+            </div>
+          )}
+
+          {/* Manipulation Tactics (If present) */}
+          {manipulationFlags && manipulationFlags.length > 0 && (
+            <div style={{
+              backgroundColor: "#F3E8FF",
+              border: "1.5px solid #6B21A8",
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "30px",
+            }}>
+              <span style={{
+                fontSize: "13px",
+                fontWeight: "900",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#6B21A8",
+                display: "block",
+                marginBottom: "8px"
+              }}>
+                MANIPULATION TACTICS OBSERVED
+              </span>
+              <ul style={{
+                fontSize: "15px",
+                fontWeight: "700",
+                lineHeight: "1.5",
+                margin: "0",
+                paddingLeft: "20px",
+                color: "#6B21A8",
+                listStyleType: "disc",
+              }}>
+                {manipulationFlags.map((flag, idx) => (
+                  <li key={idx} style={{ marginBottom: "6px" }}>{flag}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Simplified Explanation Content */}
+          <div style={{ marginBottom: "40px" }}>
+            <span style={{
+              fontSize: "12px",
+              fontWeight: "800",
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: "#475569",
+              display: "block",
+              marginBottom: "16px"
+            }}>
+              Simplified Explanation
+            </span>
+            <div style={{
+              fontSize: "19px", // Large-print (> 16pt equivalent)
+              lineHeight: "1.7", // Generous line spacing
+              color: "#0F172A",
+            }}>
+              {explanation.split(/\n\s*\n/).map((block, index) => {
+                const trimmed = block.trim();
+                if (!trimmed) return null;
+
+                const lines = trimmed.split("\n");
+                const isList = lines.every((line) => {
+                  const lineTrimmed = line.trim();
+                  return (
+                    lineTrimmed.startsWith("*") ||
+                    lineTrimmed.startsWith("-") ||
+                    /^\d+\./.test(lineTrimmed)
+                  );
+                });
+
+                if (isList) {
+                  return (
+                    <ul key={index} style={{ paddingLeft: "30px", listStyleType: "disc", marginBottom: "20px" }}>
+                      {lines.map((line, lIndex) => {
+                        const content = line.replace(/^[\s*-]+|^\d+\.\s*/, "").trim();
+                        return (
+                          <li key={lIndex} style={{ marginBottom: "8px" }}>
+                            {content}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  );
+                }
+
+                return (
+                  <p key={index} style={{ marginBottom: "20px" }}>
+                    {trimmed}
+                  </p>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Footer Note */}
+          <div style={{ borderTop: "2px solid #E2E8F0", paddingTop: "20px", marginTop: "40px", textAlign: "center" }}>
+            <p style={{ fontSize: "14px", fontWeight: "700", color: "#475569", margin: "0" }}>
+              Generated by Clario — clario-rose.vercel.app
+            </p>
+            <p style={{ fontSize: "12px", fontWeight: "600", color: "#475569", marginTop: "4px", marginBottom: "0" }}>
+              Empowering reading with clarity, compassion, and absolute privacy.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Container */}
       <div className="max-w-2xl w-full mx-auto px-4 py-8 md:py-16 flex flex-col gap-8">
 
@@ -654,74 +860,173 @@ export default function Home() {
                   Simple Explanation
                 </h2>
 
-                {/* Actions: Copy */}
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className={`px-4 py-2 rounded-lg text-sm font-bold transition duration-150 flex items-center gap-2 self-start sm:self-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
-                    copied
-                      ? "bg-[#0D9488]/10 text-[#0D9488]"
-                      : "bg-[#F4F6F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A]"
-                  }`}
-                >
-                  {copied ? (
-                    <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                      </svg>
-                      Copy Explanation
-                    </>
-                  )}
-                </button>
+                {/* Actions: Copy & Print */}
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                  {/* Print / Save as PDF Button */}
+                  <button
+                    type="button"
+                    disabled={isGeneratingPdf}
+                    onClick={async () => {
+                      setIsGeneratingPdf(true);
+                      try {
+                        const jsPDF = (await import("jspdf")).jsPDF;
+                        const html2canvas = (await import("html2canvas")).default;
+
+                        const element = document.getElementById("clario-pdf-template");
+                        if (!element) return;
+
+                        // Temporarily show the template container visually for rendering
+                        const originalStyle = element.style.display;
+                        element.style.display = "block";
+
+                        const canvas = await html2canvas(element, {
+                          // @ts-expect-error - scale option is supported by html2canvas but missing in types
+                          scale: 2,
+                          useCORS: true,
+                          logging: false,
+                          backgroundColor: "#FFFFFF",
+                        });
+
+                        element.style.display = originalStyle;
+
+                        const imgData = canvas.toDataURL("image/jpeg", 0.95);
+
+                        const pdf = new jsPDF({
+                          orientation: "portrait",
+                          unit: "mm",
+                          format: "a4",
+                        });
+
+                        const imgWidth = 210; // A4 size width in mm
+                        const pageHeight = 297; // A4 size height in mm
+                        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                        let heightLeft = imgHeight;
+                        let position = 0;
+
+                        pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
+                        heightLeft -= pageHeight;
+
+                        while (heightLeft > 0) {
+                          position = heightLeft - imgHeight;
+                          pdf.addPage();
+                          pdf.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight, undefined, "FAST");
+                          heightLeft -= pageHeight;
+                        }
+
+                        const today = new Date().toISOString().split("T")[0];
+                        pdf.save(`clario-summary-${today}.pdf`);
+                      } catch (err) {
+                        console.error("PDF generation failed: ", err);
+                      } finally {
+                        setIsGeneratingPdf(false);
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg text-sm font-bold bg-[#F4F6F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A] transition duration-150 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none disabled:opacity-50"
+                  >
+                    {isGeneratingPdf ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-[#334155]" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Preparing PDF...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Print / Save as PDF
+                      </>
+                    )}
+                  </button>
+
+                  {/* Actions: Copy */}
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold transition duration-150 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                      copied
+                        ? "bg-[#0D9488]/10 text-[#0D9488]"
+                        : "bg-[#F4F6F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    {copied ? (
+                      <>
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                        Copy Explanation
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Risk Badge & Callout Section - Top of the card, above explanation text */}
-              <div className="flex flex-col gap-3">
-                {riskLevel === "low" && (
-                  <div className="flex">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap gap-2">
+                  {riskLevel === "low" && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#E6F4EA] text-[#137333] border border-[#137333]/15 uppercase tracking-wide">
                       <span className="h-1.5 w-1.5 rounded-full bg-[#137333]" />
                       No obvious risk detected
                     </span>
+                  )}
+
+                  {riskLevel === "medium" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FEF7E0] text-[#B06000] border border-[#B06000]/15 uppercase tracking-wide">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#B06000]" />
+                      Medium Risk
+                    </span>
+                  )}
+
+                  {riskLevel === "high" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FCE8E6] text-[#C5221F] border border-[#C5221F]/15 uppercase tracking-wide animate-pulse">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#C5221F]" />
+                      High Risk
+                    </span>
+                  )}
+
+                  {/* Manipulation Badge */}
+                  {manipulationFlags && manipulationFlags.length > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#F3E8FF] text-[#6B21A8] border border-[#6B21A8]/15 uppercase tracking-wide">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#6B21A8]" />
+                      Manipulation Tactics Observed
+                    </span>
+                  )}
+                </div>
+
+                {/* Risk Reason Callouts */}
+                {riskLevel === "medium" && riskReason && (
+                  <div className="p-4 bg-[#FEF7E0]/60 border border-[#B06000]/15 text-[#78350F] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
+                    {riskReason}
                   </div>
                 )}
 
-                {riskLevel === "medium" && (
-                  <div className="space-y-2">
-                    <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FEF7E0] text-[#B06000] border border-[#B06000]/15 uppercase tracking-wide">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#B06000]" />
-                        Medium Risk
-                      </span>
-                    </div>
-                    {riskReason && (
-                      <div className="p-4 bg-[#FEF7E0]/60 border border-[#B06000]/15 text-[#78350F] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
-                        {riskReason}
-                      </div>
-                    )}
+                {riskLevel === "high" && riskReason && (
+                  <div className="p-4 bg-[#FCE8E6]/60 border border-[#C5221F]/15 text-[#7F1D1D] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
+                    {riskReason}
                   </div>
                 )}
 
-                {riskLevel === "high" && (
-                  <div className="space-y-2">
-                    <div className="flex">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FCE8E6] text-[#C5221F] border border-[#C5221F]/15 uppercase tracking-wide animate-pulse">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#C5221F]" />
-                        High Risk
-                      </span>
-                    </div>
-                    {riskReason && (
-                      <div className="p-4 bg-[#FCE8E6]/60 border border-[#C5221F]/15 text-[#7F1D1D] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
-                        {riskReason}
-                      </div>
-                    )}
+                {/* Manipulation Flags List */}
+                {manipulationFlags && manipulationFlags.length > 0 && (
+                  <div className="p-4 bg-[#F3E8FF]/40 border border-[#6B21A8]/15 text-[#6B21A8] rounded-xl text-xs md:text-sm font-semibold leading-relaxed space-y-2">
+                    <p className="font-extrabold tracking-wide uppercase text-[10px] text-[#6B21A8]/85">
+                      Observed Patterns:
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {manipulationFlags.map((flag, flagIdx) => (
+                        <li key={flagIdx}>{flag}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>
