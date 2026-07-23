@@ -21,6 +21,9 @@ export default function Home() {
   const [riskLevel, setRiskLevel] = useState("");
   const [riskReason, setRiskReason] = useState("");
   const [manipulationFlags, setManipulationFlags] = useState<string[]>([]);
+  const [confidenceLevel, setConfidenceLevel] = useState("");
+  const [confidenceNote, setConfidenceNote] = useState("");
+  const [showConfidenceExplanation, setShowConfidenceExplanation] = useState(false);
   const [selectedTone, setSelectedTone] = useState("simple");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -157,6 +160,9 @@ export default function Home() {
     setRiskLevel("");
     setRiskReason("");
     setManipulationFlags([]);
+    setConfidenceLevel("");
+    setConfidenceNote("");
+    setShowConfidenceExplanation(false);
 
     try {
       let body: BodyInit;
@@ -188,6 +194,8 @@ export default function Home() {
       setRiskLevel(data.riskLevel || "low");
       setRiskReason(data.riskReason || "");
       setManipulationFlags(data.manipulationFlags || []);
+      setConfidenceLevel(data.confidenceLevel || "high");
+      setConfidenceNote(data.confidenceNote || "");
 
       if (data.pdfPageCount !== undefined) {
         setPdfPageCount(data.pdfPageCount);
@@ -210,13 +218,23 @@ export default function Home() {
     try {
       let textToCopy = "";
 
-      // 1. Add Scam Risk
+      // 1. Add Confidence
+      if (confidenceLevel) {
+        const formattedConfidence = confidenceLevel.charAt(0).toUpperCase() + confidenceLevel.slice(1);
+        textToCopy += `Confidence: ${formattedConfidence}\n`;
+        if (confidenceLevel === "low" && confidenceNote) {
+          textToCopy += `Note: ${confidenceNote}\n`;
+        }
+        textToCopy += `\n`;
+      }
+
+      // 2. Add Scam Risk
       if (riskLevel === "medium" || riskLevel === "high") {
         const formattedRisk = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1);
         textToCopy += `Risk: ${formattedRisk}\nReason: ${riskReason}\n\n`;
       }
 
-      // 2. Add Manipulation Flags
+      // 3. Add Manipulation Flags
       if (manipulationFlags && manipulationFlags.length > 0) {
         textToCopy += `Manipulation Flags:\n`;
         manipulationFlags.forEach((flag) => {
@@ -225,7 +243,7 @@ export default function Home() {
         textToCopy += `\n`;
       }
 
-      // 3. Add Explanation
+      // 4. Add Explanation
       textToCopy += `Explanation:\n${explanation}`;
 
       await navigator.clipboard.writeText(textToCopy);
@@ -249,6 +267,9 @@ export default function Home() {
     setRiskLevel("");
     setRiskReason("");
     setManipulationFlags([]);
+    setConfidenceLevel("");
+    setConfidenceNote("");
+    setShowConfidenceExplanation(false);
     setError("");
     setIsLoading(false);
   };
@@ -360,6 +381,40 @@ export default function Home() {
               {TONES.find((t) => t.id === selectedTone)?.label || "Simple"} Explanation
             </span>
           </div>
+
+          {/* Confidence Section (Always near the top) */}
+          {confidenceLevel && (
+            <div style={{
+              backgroundColor: confidenceLevel === "high" ? "#EFF6FF" : confidenceLevel === "medium" ? "#F1F5F9" : "#FFF7ED",
+              border: `1.5px solid ${confidenceLevel === "high" ? "#1E40AF" : confidenceLevel === "medium" ? "#475569" : "#9A3412"}`,
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "30px",
+            }}>
+              <span style={{
+                fontSize: "13px",
+                fontWeight: "900",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: confidenceLevel === "high" ? "#1E40AF" : confidenceLevel === "medium" ? "#475569" : "#9A3412",
+                display: "block",
+                marginBottom: confidenceLevel === "low" && confidenceNote ? "8px" : "0"
+              }}>
+                Confidence: {confidenceLevel.toUpperCase()}
+              </span>
+              {confidenceLevel === "low" && confidenceNote && (
+                <p style={{
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  lineHeight: "1.5",
+                  margin: "0",
+                  color: "#9A3412"
+                }}>
+                  {confidenceNote}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Scam Risk Alert (If Medium or High) */}
           {(riskLevel === "medium" || riskLevel === "high") && (
@@ -972,7 +1027,49 @@ export default function Home() {
 
               {/* Risk Badge & Callout Section - Top of the card, above explanation text */}
               <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
+                  {/* Confidence Badge */}
+                  {confidenceLevel === "high" && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#EFF6FF] text-[#1E40AF] border border-[#1E40AF]/15 uppercase tracking-wide">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#1E40AF]" />
+                      High Confidence
+                      {confidenceNote && (
+                        <button
+                          type="button"
+                          onClick={() => setShowConfidenceExplanation(!showConfidenceExplanation)}
+                          className="ml-1 text-[10px] underline font-bold text-[#1E40AF] hover:text-[#1E40AF]/80 focus:outline-none"
+                          aria-label="Toggle confidence explanation"
+                        >
+                          (why?)
+                        </button>
+                      )}
+                    </span>
+                  )}
+
+                  {confidenceLevel === "medium" && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#F1F5F9] text-[#475569] border border-[#475569]/15 uppercase tracking-wide">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#475569]" />
+                      Medium Confidence
+                      {confidenceNote && (
+                        <button
+                          type="button"
+                          onClick={() => setShowConfidenceExplanation(!showConfidenceExplanation)}
+                          className="ml-1 text-[10px] underline font-bold text-[#475569] hover:text-[#475569]/80 focus:outline-none"
+                          aria-label="Toggle confidence explanation"
+                        >
+                          (why?)
+                        </button>
+                      )}
+                    </span>
+                  )}
+
+                  {confidenceLevel === "low" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FFF7ED] text-[#9A3412] border border-[#9A3412]/15 uppercase tracking-wide">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#9A3412]" />
+                      Low Confidence
+                    </span>
+                  )}
+
                   {riskLevel === "low" && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#E6F4EA] text-[#137333] border border-[#137333]/15 uppercase tracking-wide">
                       <span className="h-1.5 w-1.5 rounded-full bg-[#137333]" />
@@ -1002,6 +1099,20 @@ export default function Home() {
                     </span>
                   )}
                 </div>
+
+                {/* Confidence explanation Note (for high/medium, toggled by user) */}
+                {showConfidenceExplanation && (confidenceLevel === "high" || confidenceLevel === "medium") && confidenceNote && (
+                  <div className="p-4 bg-blue-50/50 border border-blue-100 text-blue-800 rounded-xl text-xs md:text-sm font-semibold leading-relaxed animate-fade-in">
+                    {confidenceNote}
+                  </div>
+                )}
+
+                {/* Low Confidence Callout Box - Always visible */}
+                {confidenceLevel === "low" && confidenceNote && (
+                  <div className="p-4 bg-[#FFF7ED] border border-[#9A3412]/15 text-[#9A3412] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
+                    {confidenceNote}
+                  </div>
+                )}
 
                 {/* Risk Reason Callouts */}
                 {riskLevel === "medium" && riskReason && (
