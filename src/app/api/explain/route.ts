@@ -61,9 +61,38 @@ export async function POST(request: Request) {
     let inputType: "text" | "pdf" | "image" = "text";
     let pdfPageCount: number | null = null;
 
+    // Early Content-Length check to prevent reading excessively large payloads
+    const contentLengthStr = request.headers.get("content-length");
+    if (contentLengthStr) {
+      const contentLength = parseInt(contentLengthStr, 10);
+      if (!isNaN(contentLength) && contentLength > 5 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: "The file is too large. Max file size is 5MB." },
+          { status: 413 }
+        );
+      }
+    }
+
     // 1. Parse payload based on Content-Type
     if (contentType.includes("multipart/form-data")) {
-      const formData = await request.formData();
+      let formData;
+      try {
+        formData = await request.formData();
+      } catch (err: unknown) {
+        console.error("Failed to parse form data:", err);
+        // If form parsing failed due to body size limit or network abort
+        const errMsg = err instanceof Error ? err.message : "";
+        if (errMsg.toLowerCase().includes("large") || errMsg.toLowerCase().includes("limit")) {
+          return NextResponse.json(
+            { error: "The file is too large. Max file size is 5MB." },
+            { status: 413 }
+          );
+        }
+        return NextResponse.json(
+          { error: "Failed to parse file upload request. Please try again." },
+          { status: 400 }
+        );
+      }
       text = (formData.get("text") as string) || "";
       tone = (formData.get("tone") as string) || "simple";
       file = formData.get("file") as File | null;
@@ -118,7 +147,7 @@ export async function POST(request: Request) {
       if (file.size > 5 * 1024 * 1024) {
         return NextResponse.json(
           { error: "The file is too large. Max file size is 5MB." },
-          { status: 400 }
+          { status: 413 }
         );
       }
 
@@ -314,8 +343,22 @@ ${text}
       ...(pdfPageCount !== null ? { pdfPageCount } : {}),
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in /api/explain:", error);
+
+    // Check if error is related to payload size, body-parser limits, or too large content
+    const errMsg = error instanceof Error ? error.message : "";
+    if (
+      errMsg.toLowerCase().includes("large") ||
+      errMsg.toLowerCase().includes("limit") ||
+      errMsg.toLowerCase().includes("too large")
+    ) {
+      return NextResponse.json(
+        { error: "The file is too large. Max file size is 5MB." },
+        { status: 413 }
+      );
+    }
+
     return NextResponse.json(
       { error: "We couldn't analyze this content right now. Please try again in a moment." },
       { status: 500 }
