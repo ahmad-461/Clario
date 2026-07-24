@@ -63,8 +63,15 @@ const RESPONSE_SCHEMA: Schema = {
       },
       description: "2-3 short, concrete conversational talking points or questions the two readers (e.g. an adult child helping an elderly parent) could discuss together (e.g. 'Ask them: does this deadline feel rushed to you too?'). Must be empty array if companionMode is inactive.",
     },
+    omissionFlags: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.STRING,
+      },
+      description: "An array of short strings describing notably absent information relevant to the document type (e.g. 'No cancellation policy mentioned', 'Salary/compensation details are missing', 'No contact information for disputes'). Keep flags short and descriptive. Only flag omissions that would be reasonably expected for that TYPE of document (e.g. a lease missing a security deposit clause, a job offer missing start date/salary, a subscription notice missing a cancellation method). Return empty array if nothing notable is missing, or if the input is too short, generic, or casual for this analysis to be meaningful.",
+    },
   },
-  required: ["explanation", "riskLevel", "riskReason", "manipulationFlags", "confidenceLevel", "confidenceNote", "talkingPoints"],
+  required: ["explanation", "riskLevel", "riskReason", "manipulationFlags", "confidenceLevel", "confidenceNote", "talkingPoints", "omissionFlags"],
 };
 
 export async function POST(request: Request) {
@@ -226,7 +233,7 @@ export async function POST(request: Request) {
           ? extractedText.substring(0, 150000) + "\n\n[Truncated due to length]"
           : extractedText;
 
-        const prompt = `Please carefully analyze the following text extracted from a PDF. You have five main tasks:
+        const prompt = `Please carefully analyze the following text extracted from a PDF. You have six main tasks:
 1. Simplify and explain the text clearly according to your system instructions for the requested tone.
 2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
@@ -238,6 +245,9 @@ export async function POST(request: Request) {
 5. Provide talkingPoints according to these rules:
    - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
    - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].
+6. Analyze the text for notably absent information that should reasonably be present for this TYPE of document, and return these as omissionFlags:
+   - Only flag omissions that are expected for the specific document type (e.g., a lease missing security deposit terms, a job offer missing salary/start date, a subscription missing cancellation terms).
+   - Return an empty array [] if no notable omissions are found, or if the input is a casual personal message or short text where this analysis is not meaningful.
 
 Text to analyze:
 """
@@ -259,7 +269,7 @@ ${finalPdfText}
           },
         };
 
-        const prompt = `Please carefully analyze the attached image. You have five main tasks:
+        const prompt = `Please carefully analyze the attached image. You have six main tasks:
 1. Simplify and explain the text or visual content clearly according to your system instructions for the requested tone.
 2. Analyze the content for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 3. Analyze the content for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
@@ -270,7 +280,10 @@ ${finalPdfText}
    - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
 5. Provide talkingPoints according to these rules:
    - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
-   - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].`;
+   - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].
+6. Analyze the image content for notably absent information that should reasonably be present for this TYPE of document, and return these as omissionFlags:
+   - Only flag omissions that are expected for the specific document type (e.g., a lease missing security deposit terms, a job offer missing salary/start date, a subscription missing cancellation terms).
+   - Return an empty array [] if no notable omissions are found, or if the input is a casual personal message or short text where this analysis is not meaningful.`;
 
         result = await model.generateContent([prompt, imagePart]);
       }
@@ -292,7 +305,7 @@ ${finalPdfText}
         );
       }
 
-      const prompt = `Please carefully analyze the following text. You have five main tasks:
+      const prompt = `Please carefully analyze the following text. You have six main tasks:
 1. Simplify and explain the text clearly according to your system instructions for the requested tone.
 2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
@@ -304,6 +317,9 @@ ${finalPdfText}
 5. Provide talkingPoints according to these rules:
    - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
    - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].
+6. Analyze the text for notably absent information that should reasonably be present for this TYPE of document, and return these as omissionFlags:
+   - Only flag omissions that are expected for the specific document type (e.g., a lease missing security deposit terms, a job offer missing salary/start date, a subscription missing cancellation terms).
+   - Return an empty array [] if no notable omissions are found, or if the input is a casual personal message or short text where this analysis is not meaningful.
 
 Text to analyze:
 """
@@ -333,10 +349,10 @@ ${text}
       );
     }
 
-    const { explanation, riskLevel, riskReason, manipulationFlags, confidenceLevel, confidenceNote, talkingPoints } = parsedResponse;
+    const { explanation, riskLevel, riskReason, manipulationFlags, confidenceLevel, confidenceNote, talkingPoints, omissionFlags } = parsedResponse;
 
     // Validate properties
-    if (!explanation || !riskLevel || typeof riskReason !== "string" || !Array.isArray(manipulationFlags) || !confidenceLevel || typeof confidenceNote !== "string" || !Array.isArray(talkingPoints)) {
+    if (!explanation || !riskLevel || typeof riskReason !== "string" || !Array.isArray(manipulationFlags) || !confidenceLevel || typeof confidenceNote !== "string" || !Array.isArray(talkingPoints) || !Array.isArray(omissionFlags)) {
       throw new Error("Response JSON does not contain all required fields");
     }
 
@@ -375,6 +391,7 @@ ${text}
       confidenceLevel,
       confidenceNote,
       talkingPoints,
+      omissionFlags,
       ...(pdfPageCount !== null ? { pdfPageCount } : {}),
     });
 
