@@ -735,15 +735,15 @@ export default function Home() {
 
           {/* Right Column: The actual Workspace Tool shifted right (cols 5 to 12) */}
           <div className="lg:col-span-8 w-full flex flex-col gap-8 z-10">
-            <main className="w-full space-y-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <main className="w-full space-y-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
 
                 {/* Tone Selector */}
                 <div className="flex flex-col items-start gap-3">
-                  <span className="text-xs font-bold text-[#334155] uppercase tracking-wider">
+                  <span className="text-xs font-medium text-[#334155] uppercase tracking-widest">
                     Audience Tone Mode
                   </span>
-                  <div className="inline-flex p-1 bg-white border border-[#E2E8F0] rounded-full shadow-sm gap-1 max-w-full overflow-x-auto scrollbar-none">
+                  <div className="inline-flex p-1.5 bg-[#F4F6F9] border border-[#E2E8F0] rounded-full shadow-inner gap-1.5 max-w-full overflow-x-auto scrollbar-none">
                     {TONES.map((tone) => {
                       const isActive = selectedTone === tone.id;
                       return (
@@ -752,10 +752,10 @@ export default function Home() {
                           type="button"
                           disabled={isLoading}
                           onClick={() => handleToneChange(tone.id)}
-                          className={`px-3.5 py-1.5 md:px-5 md:py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                          className={`px-4 py-2 md:px-6 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
                             isActive
-                              ? "bg-[#0D9488] text-white shadow-sm"
-                              : "text-[#334155] hover:bg-[#F4F6F9] hover:text-[#0F172A] disabled:opacity-50"
+                              ? "bg-[#0D9488] text-white shadow-md border border-[#0F766E]/10 font-bold"
+                              : "text-[#334155] hover:bg-white hover:shadow-sm hover:text-[#0F172A] disabled:opacity-50"
                           }`}
                         >
                           {tone.label}
@@ -768,12 +768,12 @@ export default function Home() {
                 {/* Input Card with Tabs */}
                 <div className={`relative bg-white rounded-2xl border transition duration-300 overflow-hidden ${
                   isLoading
-                    ? "border-transparent ring-2 ring-[#0D9488] shadow-md animate-pulse"
-                    : "border-[#E2E8F0] shadow-sm focus-within:ring-2 focus-within:ring-[#0D9488] focus-within:border-transparent"
+                    ? "border-transparent ring-2 ring-[#0D9488] shadow-2xl animate-pulse"
+                    : "border-[#E2E8F0] shadow-xl hover:shadow-2xl focus-within:ring-2 focus-within:ring-[#0D9488] focus-within:border-transparent"
                 }`}>
 
                   {/* Input Mode Tabs */}
-                  <div className="flex border-b border-[#E2E8F0]">
+                  <div className="flex border-b border-[#E2E8F0] relative">
                     <button
                       type="button"
                       disabled={isLoading}
@@ -781,10 +781,10 @@ export default function Home() {
                         setInputMode("text");
                         setError("");
                       }}
-                      className={`flex-1 py-3.5 text-xs md:text-sm font-bold border-b-2 transition-all duration-150 rounded-tl-2xl flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                      className={`flex-1 py-4 text-xs md:text-sm font-bold transition-all duration-150 rounded-tl-2xl flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none z-10 ${
                         inputMode === "text"
-                          ? "border-[#0D9488] text-[#0D9488] bg-[#F4F6F9]/30"
-                          : "border-transparent text-[#334155] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
+                          ? "text-[#0D9488] bg-[#F4F6F9]/30"
+                          : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
                       }`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -799,10 +799,10 @@ export default function Home() {
                         setInputMode("file");
                         setError("");
                       }}
-                      className={`flex-1 py-3.5 text-xs md:text-sm font-bold border-b-2 transition-all duration-150 rounded-tr-2xl flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                      className={`flex-1 py-4 text-xs md:text-sm font-bold transition-all duration-150 rounded-tr-2xl flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none z-10 ${
                         inputMode === "file"
-                          ? "border-[#0D9488] text-[#0D9488] bg-[#F4F6F9]/30"
-                          : "border-transparent text-[#334155] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
+                          ? "text-[#0D9488] bg-[#F4F6F9]/30"
+                          : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
                       }`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
@@ -810,6 +810,13 @@ export default function Home() {
                       </svg>
                       Upload File
                     </button>
+
+                    {/* Sliding active indicator bar */}
+                    <div
+                      className={`absolute bottom-0 left-0 h-0.5 w-1/2 bg-[#0D9488] transition-transform duration-300 ease-out z-20 ${
+                        inputMode === "text" ? "translate-x-0" : "translate-x-full"
+                      }`}
+                    />
                   </div>
 
                   {/* Dynamic Content Body */}
@@ -820,7 +827,7 @@ export default function Home() {
                       </label>
                       <textarea
                         id="inputText"
-                        className="w-full min-h-[180px] md:min-h-[220px] p-5 text-base md:text-lg text-[#0F172A] placeholder-[#334155]/70 focus:outline-none resize-y bg-transparent border-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0D9488]"
+                        className="w-full min-h-[180px] md:min-h-[220px] p-6 text-base md:text-lg text-[#0F172A] placeholder-[#475569]/60 focus:outline-none resize-y bg-[#F4F6F9] shadow-inner border-none focus-visible:ring-0"
                         placeholder="Paste anything confusing — a letter, a message, a form, an assignment..."
                         maxLength={CHARACTER_LIMIT}
                         value={inputText}
@@ -829,8 +836,8 @@ export default function Home() {
                       />
 
                       {/* Textarea Bottom Control bar */}
-                      <div className="flex justify-between items-center px-5 py-3 border-t border-[#E2E8F0] bg-[#F4F6F9]/50 text-sm text-[#334155]">
-                        <span>
+                      <div className="flex justify-between items-center px-6 py-4 border-t border-[#E2E8F0] bg-[#F4F6F9] text-sm text-[#334155]">
+                        <span className="font-medium text-xs tracking-wider text-[#475569]">
                           {inputText.length.toLocaleString()} / {CHARACTER_LIMIT.toLocaleString()} characters
                         </span>
 
@@ -838,7 +845,7 @@ export default function Home() {
                           <button
                             type="button"
                             onClick={() => setInputText("")}
-                            className="text-sm font-bold text-[#0D9488] hover:text-[#0D9488]/80 transition duration-150 animate-fade-in focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none rounded"
+                            className="text-xs font-bold text-[#0D9488] hover:text-[#0D9488]/80 transition duration-150 animate-fade-in focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none rounded uppercase tracking-wider"
                           >
                             Clear Input
                           </button>
@@ -850,8 +857,8 @@ export default function Home() {
                       {/* File Upload / Preview Mode */}
                       {selectedFile ? (
                         /* File Preview State */
-                        <div className="p-6 flex flex-col items-center justify-center gap-4 min-h-[180px] md:min-h-[220px] bg-transparent">
-                          <div className="flex items-center gap-4 p-4 bg-[#F4F6F9] border border-[#E2E8F0] rounded-xl w-full max-w-md shadow-sm">
+                        <div className="p-8 flex flex-col items-center justify-center gap-4 min-h-[180px] md:min-h-[220px] bg-[#F4F6F9] shadow-inner">
+                          <div className="flex items-center gap-4 p-4 bg-white border border-[#E2E8F0] rounded-xl w-full max-w-md shadow-sm">
 
                             {/* Image Thumbnail or PDF Icon */}
                             {imagePreviewUrl ? (
@@ -916,10 +923,10 @@ export default function Home() {
                               document.getElementById("fileInput")?.click();
                             }
                           }}
-                          className={`p-6 md:p-10 flex flex-col items-center justify-center gap-3 min-h-[180px] md:min-h-[220px] cursor-pointer transition-all duration-150 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0D9488] focus-visible:outline-none focus-visible:bg-[#F4F6F9]/50 ${
+                          className={`p-8 md:p-12 flex flex-col items-center justify-center gap-3 min-h-[180px] md:min-h-[220px] cursor-pointer transition-all duration-150 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0D9488] focus-visible:outline-none bg-[#F4F6F9] shadow-inner ${
                             isDragging
                               ? "border-2 border-dashed border-[#0D9488] bg-[#0D9488]/5 m-4 rounded-xl"
-                              : "border-none hover:bg-[#F4F6F9]/50"
+                              : "border-none hover:bg-[#E2E8F0]/30"
                           }`}
                           onClick={() => {
                             if (!isLoading) {
@@ -963,8 +970,8 @@ export default function Home() {
                       )}
 
                       {/* File Upload Bottom Control bar */}
-                      <div className="flex justify-between items-center px-5 py-3 border-t border-[#E2E8F0] bg-[#F4F6F9]/50 text-sm text-[#334155]">
-                        <span>
+                      <div className="flex justify-between items-center px-6 py-4 border-t border-[#E2E8F0] bg-[#F4F6F9] text-sm text-[#334155]">
+                        <span className="font-medium text-xs tracking-wider text-[#475569]">
                           {selectedFile ? "1 file selected" : "No file selected"}
                         </span>
 
@@ -972,7 +979,7 @@ export default function Home() {
                           <button
                             type="button"
                             onClick={handleRemoveFile}
-                            className="text-sm font-bold text-[#0D9488] hover:text-[#0D9488]/80 transition duration-150 animate-fade-in focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none rounded"
+                            className="text-xs font-bold text-[#0D9488] hover:text-[#0D9488]/80 transition duration-150 animate-fade-in focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none rounded uppercase tracking-wider"
                           >
                             Clear File
                           </button>
@@ -999,12 +1006,12 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={isSubmitDisabled}
-                    className={`w-full sm:w-auto px-10 py-4 rounded-xl font-bold text-base shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                    className={`w-full sm:w-auto px-12 py-4 rounded-xl font-bold text-base shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
                       isLoading
                         ? "bg-[#0D9488] text-white cursor-not-allowed scale-[0.98]"
                         : isSubmitDisabled
-                        ? "bg-[#E2E8F0] text-[#334155]/50 cursor-not-allowed shadow-none"
-                        : "bg-[#0D9488] text-white hover:bg-[#0D9488]/90 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+                        ? "bg-[#0D9488]/10 text-[#0D9488]/40 border border-[#0D9488]/10 cursor-not-allowed shadow-none"
+                        : "bg-[#0D9488] text-white hover:bg-[#0D9488]/90 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] active:hover:scale-[0.98] transition-transform"
                     }`}
                   >
                     {isLoading ? (
