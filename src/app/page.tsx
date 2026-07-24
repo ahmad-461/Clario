@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { Header } from "./Header";
-import { ClarioDivider } from "./ClarioDivider";
 import { ClarioHero } from "./ClarioHero";
-import { ClarioLogo } from "./ClarioLogo";
 import { ClarioThreadLine } from "./ClarioThreadLine";
+import { SignatureFooter } from "./SignatureFooter";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { User } from "@supabase/supabase-js";
 
@@ -411,56 +411,50 @@ export default function Home() {
     setIsLoading(false);
   };
 
-  // Custom text renderer to format bullet points and paragraphs securely
+  // Custom text renderer to format markdown (bullet points, bold, paragraphs, etc.) securely
   const renderExplanation = (text: string) => {
-    const blocks = text.split(/\n\s*\n/);
     const isElderly = selectedTone === "elderly-friendly";
 
-    return blocks.map((block, index) => {
-      const trimmed = block.trim();
-      if (!trimmed) return null;
-
-      const lines = trimmed.split("\n");
-
-      // Determine if this block is a list
-      const isList = lines.every((line) => {
-        const lineTrimmed = line.trim();
-        return (
-          lineTrimmed.startsWith("*") ||
-          lineTrimmed.startsWith("-") ||
-          /^\d+\./.test(lineTrimmed)
-        );
-      });
-
-      if (isList) {
-        return (
-          <ul
-            key={index}
-            className="list-disc pl-6 mb-4 space-y-2 text-[#0F172A]"
-            style={isElderly ? { fontSize: "18px", lineHeight: "1.6" } : undefined}
-          >
-            {lines.map((line, lIndex) => {
-              const content = line.replace(/^[\s*-]+|^\d+\.\s*/, "").trim();
-              return (
-                <li key={lIndex} className="leading-relaxed">
-                  {content}
-                </li>
-              );
-            })}
-          </ul>
-        );
-      }
-
-      return (
-        <p
-          key={index}
-          className="leading-relaxed mb-4 text-[#0F172A]"
-          style={isElderly ? { fontSize: "18px", lineHeight: "1.6" } : undefined}
+    return (
+      <div style={isElderly ? { fontSize: "18px", lineHeight: "1.6" } : undefined}>
+        <ReactMarkdown
+          components={{
+            p: ({ children }) => (
+              <p className="leading-relaxed mb-4 text-[#0F172A]">
+                {children}
+              </p>
+            ),
+            ul: ({ children }) => (
+              <ul className="list-disc pl-6 mb-4 space-y-2 text-[#0F172A]">
+                {children}
+              </ul>
+            ),
+            ol: ({ children }) => (
+              <ol className="list-decimal pl-6 mb-4 space-y-2 text-[#0F172A]">
+                {children}
+              </ol>
+            ),
+            li: ({ children }) => (
+              <li className="leading-relaxed">
+                {children}
+              </li>
+            ),
+            strong: ({ children }) => (
+              <strong className="font-extrabold text-[#0F172A]">
+                {children}
+              </strong>
+            ),
+            em: ({ children }) => (
+              <em className="italic text-[#0F172A]">
+                {children}
+              </em>
+            ),
+          }}
         >
-          {trimmed}
-        </p>
-      );
-    });
+          {text}
+        </ReactMarkdown>
+      </div>
+    );
   };
 
   const isSubmitDisabled =
@@ -655,41 +649,42 @@ export default function Home() {
               lineHeight: "1.7", // Generous line spacing
               color: "#0F172A",
             }}>
-              {explanation.split(/\n\s*\n/).map((block, index) => {
-                const trimmed = block.trim();
-                if (!trimmed) return null;
-
-                const lines = trimmed.split("\n");
-                const isList = lines.every((line) => {
-                  const lineTrimmed = line.trim();
-                  return (
-                    lineTrimmed.startsWith("*") ||
-                    lineTrimmed.startsWith("-") ||
-                    /^\d+\./.test(lineTrimmed)
-                  );
-                });
-
-                if (isList) {
-                  return (
-                    <ul key={index} style={{ paddingLeft: "30px", listStyleType: "disc", marginBottom: "20px" }}>
-                      {lines.map((line, lIndex) => {
-                        const content = line.replace(/^[\s*-]+|^\d+\.\s*/, "").trim();
-                        return (
-                          <li key={lIndex} style={{ marginBottom: "8px" }}>
-                            {content}
-                          </li>
-                        );
-                      })}
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => (
+                    <p style={{ marginBottom: "20px" }}>
+                      {children}
+                    </p>
+                  ),
+                  ul: ({ children }) => (
+                    <ul style={{ paddingLeft: "30px", listStyleType: "disc", marginBottom: "20px" }}>
+                      {children}
                     </ul>
-                  );
-                }
-
-                return (
-                  <p key={index} style={{ marginBottom: "20px" }}>
-                    {trimmed}
-                  </p>
-                );
-              })}
+                  ),
+                  ol: ({ children }) => (
+                    <ol style={{ paddingLeft: "30px", listStyleType: "decimal", marginBottom: "20px" }}>
+                      {children}
+                    </ol>
+                  ),
+                  li: ({ children }) => (
+                    <li style={{ marginBottom: "8px" }}>
+                      {children}
+                    </li>
+                  ),
+                  strong: ({ children }) => (
+                    <strong style={{ fontWeight: "bold" }}>
+                      {children}
+                    </strong>
+                  ),
+                  em: ({ children }) => (
+                    <em style={{ fontStyle: "italic" }}>
+                      {children}
+                    </em>
+                  ),
+                }}
+              >
+                {explanation}
+              </ReactMarkdown>
             </div>
           </div>
 
@@ -1448,87 +1443,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Threshold Divider */}
-      <ClarioDivider className="my-0 w-full" />
-
-      {/* Footer Section: CONFIDENT, FULL-BLEED, ASYMMETRIC DARK SLATE DESTIONATION */}
-      <footer className="w-full bg-[#0F172A] text-white py-16 md:py-24 relative overflow-hidden z-10">
-        {/* Background Atmosphere */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#0D9488]/5 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl w-full mx-auto px-6 md:px-12 lg:px-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-
-            {/* Left Column: Oversized statement, trust detail, and account usage */}
-            <div className="lg:col-span-8 space-y-8 text-left">
-
-              {/* Massive Display closing Statement */}
-              <div className="space-y-4">
-                <span className="text-xs font-bold text-[#0D9488] uppercase tracking-widest block">
-                  Our Manifesto
-                </span>
-                <h2 className="font-display font-medium text-white leading-tight text-3xl md:text-5xl lg:text-6xl tracking-[-0.04em]">
-                  Clarity is a right, <br />
-                  not a privilege.
-                </h2>
-              </div>
-
-              {/* Comprehensive Trust & Privacy details in high contrast text (slate-200) */}
-              <div className="space-y-6 max-w-2xl pt-4">
-                <div className="space-y-2">
-                  <h3 className="text-xs font-extrabold tracking-widest text-[#0D9488] uppercase">
-                    How it works &amp; Privacy
-                  </h3>
-                  <p className="text-slate-200 text-sm md:text-base leading-relaxed font-semibold">
-                    Clario is built to empower confident understanding. We turn confusing legalese, terms of service, and lease agreements into plain, accessible language.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-300">
-                  <div className="space-y-1.5">
-                    <span className="font-bold text-[#0D9488] block text-xs uppercase tracking-wide">For Guest Users</span>
-                    <p className="leading-relaxed text-[13px] font-semibold">
-                      Complete privacy. Your texts, uploaded documents, and simplified explanations are processed in real-time and never saved. We collect only anonymous, aggregated metadata to monitor performance.
-                    </p>
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="font-bold text-[#0D9488] block text-xs uppercase tracking-wide">For Logged-In Users</span>
-                    <p className="leading-relaxed text-[13px] font-semibold">
-                      Custom convenience. Accounts are entirely optional. Signing up enables secure storage of your generated explanations (never original texts/files) in your private, RLS-protected history list, which you can clear anytime.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Confident large-scale logo closing visual anchor */}
-            <div className="lg:col-span-4 lg:text-right flex flex-col items-start lg:items-end gap-6 justify-between lg:h-full lg:min-h-[300px]">
-              <div className="pt-2">
-                {/* Large Logo Lockup acting as the final closing anchor */}
-                <ClarioLogo showWordmark={true} size="lg" wordmarkClass="text-white font-display font-medium" />
-              </div>
-
-              <div className="text-left lg:text-right space-y-2">
-                <p className="text-xs text-slate-400 font-semibold tracking-wide">
-                  Empowering reading with clarity, compassion, and absolute privacy.
-                </p>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Bottom Utility Divider Line & Copyright */}
-          <div className="mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400 font-semibold tracking-wide">
-            <div>
-              &copy; {new Date().getFullYear()} Clario. All rights reserved.
-            </div>
-            <div className="flex gap-4">
-              <span className="text-slate-500 font-medium">clario-rose.vercel.app</span>
-            </div>
-          </div>
-
-        </div>
-      </footer>
+      {/* Signature Footer */}
+      <SignatureFooter />
 
     </div>
   );
