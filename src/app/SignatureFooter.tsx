@@ -119,7 +119,7 @@ export function SignatureFooter() {
         {/* Below-the-line sentence */}
         <div className="lg:absolute lg:bottom-16 lg:right-12 xl:right-16 lg:max-w-md w-full text-right md:text-center lg:text-right self-end md:self-auto">
           <p className="font-display text-[#0F172A] font-medium leading-snug lg:leading-tight text-xl md:text-2xl lg:text-2xl xl:text-3xl">
-            Clario makes sure that&apos;s not the end of the story.
+            Clario makes sure you understand before you sign, click, or trust.
           </p>
         </div>
 

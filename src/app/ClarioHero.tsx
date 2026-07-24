@@ -111,13 +111,13 @@ export function ClarioHero() {
             {/* Desktop Overlap Container */}
             <div className="lg:-mr-24 xl:-mr-32 lg:relative lg:z-30">
               <h1 className="font-display font-medium text-[#0F172A] leading-[0.9] text-[2.75rem] md:text-6xl lg:text-[clamp(3.2rem,6.8vw,5.5rem)] tracking-[-0.04em] lg:tracking-[-0.05em]">
-                Turn confusion <br />
-                into <span className="text-[#0D9488] italic font-semibold tracking-tighter block mt-2 lg:inline lg:mt-0">plain language.</span>
+                Understand <br />
+                before you <span className="text-[#0D9488] italic font-semibold tracking-tighter block mt-2 lg:inline lg:mt-0">sign, click, or trust.</span>
               </h1>
             </div>
 
             <p className="text-base md:text-lg text-[#334155] font-medium max-w-lg leading-relaxed pt-2 md:pt-4">
-              Clario untangles dense fine print, confusing legal documents, and misleading messages—safeguarding you from manipulation and hidden scam risks.
+              We turn confusion into plain language. Clario untangles dense fine print, confusing contracts, and misleading online messages—safeguarding you from manipulation and hidden scam risks.
             </p>
 
             {/* Downward CTA Button */}

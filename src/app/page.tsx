@@ -1297,10 +1297,10 @@ export default function Home() {
               <div className="bg-[#FAF5F0] border border-[#EBE3D5] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in text-left">
                 <div className="space-y-1">
                   <p className="text-sm font-bold text-[#78350F]">
-                    👩‍👦 Helping someone else understand something?
+                    👩‍👦 Helping someone else understand before they sign, click, or trust?
                   </p>
                   <p className="text-xs text-slate-700 font-medium leading-relaxed">
-                    Try the Waiting Room—designed specifically for two people looking at a screen together.
+                    Try the Waiting Room—built for two people to read something confusing side by side, and decide together.
                   </p>
                 </div>
                 <a
@@ -1722,7 +1722,7 @@ export default function Home() {
                 Deception &amp; scam detection
               </h4>
               <p className="text-[#334155] text-sm md:text-base leading-relaxed font-semibold">
-                Clario scans documents for manipulative language, false urgency, and liability traps. Rather than hiding behind legal disclaimers, we flag these predatory psychological triggers instantly.
+                Clario scans documents for manipulative language, false urgency, and liability traps so you don&apos;t sign, click, or trust something dangerous. Rather than hiding behind legal disclaimers, we flag these predatory psychological triggers instantly to protect your decisions.
               </p>
             </div>
 
@@ -1763,7 +1763,7 @@ export default function Home() {
               Compassionate privacy by design
             </h4>
             <p className="text-[#334155] text-sm md:text-lg leading-relaxed font-semibold max-w-2xl mx-auto">
-              Your safety starts with your personal data. We process documents in real-time and never save your original text or file contents. We record only anonymous, non-blocking metrics (such as the chosen tone mode or confidence score) to keep Clario simple, secure, and respectful of your absolute privacy.
+              Understanding before you trust starts with a space that respects you completely. We process your documents in real-time and never store original text or file contents. By logging only anonymous, non-blocking metrics, we safeguard your right to read and decide in absolute privacy.
             </p>
           </div>
 
@@ -1778,7 +1778,7 @@ export default function Home() {
                 &ldquo;Accessibility is not a feature list. It is an understanding that every person reads differently.&rdquo;
               </p>
               <p className="text-[#334155] text-sm md:text-base leading-relaxed font-semibold">
-                Whether you need straightforward clarity (Simple), classroom explanations (Teacher &amp; Student), or large-print formats with high line height to prevent layout shifts (Elderly-Friendly), Clario scales perfectly to protect you.
+                We customize the translation so everyone can understand before deciding, regardless of how they read best. Whether you need straightforward clarity (Simple), classroom companion tools (Teacher &amp; Student), or large-print formats (Elderly-Friendly), Clario scales to meet you where you are.
               </p>
             </div>
 

@@ -1,0 +1,26 @@
+
+> clario@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.5.21 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+   - Experiments (use with caution):
+     · serverActions
+
+ ✓ Starting...
+ ✓ Ready in 1552ms
+ ○ Compiling / ...
+ ✓ Compiled / in 9.2s
+ HEAD / 200 in 11272ms
+ GET / 200 in 438ms
+ ○ Compiling /waiting-room ...
+ ✓ Compiled /waiting-room in 1258ms
+ GET /waiting-room 200 in 1510ms
+ ○ Compiling /untangle-log ...
+ ✓ Compiled /untangle-log in 617ms
+ GET /untangle-log 200 in 819ms
+ ○ Compiling /api/untangle-log ...
+ ✓ Compiled /api/untangle-log in 1130ms
+Supabase is not configured. Returning fallback mock data.
+ GET /api/untangle-log 200 in 1544ms
