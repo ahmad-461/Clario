@@ -1,14 +1,21 @@
+
+> clario@0.1.0 dev
+> next dev --turbopack
+
    ▲ Next.js 15.5.21 (Turbopack)
-   - Local:        http://localhost:3005
-   - Network:      http://192.168.0.2:3005
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
    - Experiments (use with caution):
      · serverActions
 
  ✓ Starting...
- ✓ Ready in 1799ms
+ ✓ Ready in 1776ms
  ○ Compiling / ...
- ✓ Compiled / in 10.8s
- GET / 200 in 12039ms
- ○ Compiling /history ...
- ✓ Compiled /history in 732ms
- GET /history 200 in 876ms
+ ✓ Compiled / in 10s
+ GET / 200 in 11199ms
+ GET / 200 in 258ms
+ GET / 200 in 228ms
+ GET / 200 in 232ms
+ GET / 200 in 256ms
+ GET / 200 in 210ms
+ GET / 200 in 245ms
