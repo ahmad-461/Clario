@@ -217,19 +217,20 @@ export default function UntangleLogPage() {
           </div>
 
           <div className="flex items-center gap-2 text-xs font-bold text-[#475569] bg-white border border-[#E2E8F0] px-3.5 py-1.5 rounded-xl shadow-sm self-start sm:self-auto">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className={`h-1.5 w-1.5 rounded-full ${stats?.isRealData ? "bg-emerald-500" : "bg-slate-400"} animate-pulse`} />
             <span>
               {stats?.isRealData
                 ? "Live from Supabase metrics"
-                : "Aggregated benchmark metrics"}
+                : "Sample benchmark data — live connection offline"}
             </span>
           </div>
         </div>
 
         {/* Error Handling */}
         {error && (
-          <div role="alert" className="p-4 bg-[#FEF2F2] border border-[#991B1B]/15 rounded-xl text-[#7F1D1D] text-sm font-semibold">
-            {error}
+          <div role="alert" className="p-4 bg-[#FEF2F2] border border-[#7F1D1D]/15 rounded-xl flex flex-col gap-1 text-[#7F1D1D] animate-fade-in">
+            <span className="text-xs font-extrabold tracking-widest uppercase">Error</span>
+            <p className="text-sm font-semibold">{error}</p>
           </div>
         )}
 

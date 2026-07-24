@@ -1,0 +1,7 @@
+   ▲ Next.js 15.5.21
+   - Local:        http://localhost:3002
+   - Network:      http://192.168.0.2:3002
+
+ ✓ Starting...
+ ✓ Ready in 900ms
+Supabase is not configured. Returning fallback mock data.
