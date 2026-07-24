@@ -1024,6 +1024,24 @@ export default function Home() {
                 </div>
               </form>
 
+              {/* Quiet Entry Point to Waiting Room */}
+              <div className="bg-[#FAF5F0] border border-[#EBE3D5] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in text-left">
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-[#78350F]">
+                    👩‍👦 Helping someone else understand something?
+                  </p>
+                  <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                    Try the Waiting Room—designed specifically for two people looking at a screen together.
+                  </p>
+                </div>
+                <a
+                  href="/waiting-room"
+                  className="px-4 py-2 bg-[#78350F] hover:bg-[#5F270B] text-white text-xs font-bold rounded-lg transition duration-150 self-start sm:self-auto shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#78350F]"
+                >
+                  Try the Waiting Room →
+                </a>
+              </div>
+
               {/* Skeleton Loading State */}
               {isLoading && (
                 <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-6 md:p-8 space-y-6 animate-pulse transition-all duration-300">
