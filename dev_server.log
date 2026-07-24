@@ -9,8 +9,22 @@
      · serverActions
 
  ✓ Starting...
- ✓ Ready in 1609ms
+ ✓ Ready in 1631ms
  ○ Compiling / ...
- ✓ Compiled / in 11.2s
- GET / 200 in 12650ms
- GET / 200 in 251ms
+ ✓ Compiled / in 11.9s
+ GET / 200 in 13419ms
+ ○ Compiling /untangle-log ...
+ ✓ Compiled /untangle-log in 1360ms
+ GET /untangle-log 200 in 1523ms
+ ○ Compiling /api/untangle-log ...
+ ✓ Compiled /api/untangle-log in 1528ms
+Supabase is not configured. Returning fallback mock data.
+ GET /api/untangle-log 200 in 2080ms
+Supabase is not configured. Returning fallback mock data.
+ GET /api/untangle-log 200 in 426ms
+ GET / 200 in 274ms
+ GET /untangle-log 200 in 199ms
+Supabase is not configured. Returning fallback mock data.
+ GET /api/untangle-log 200 in 350ms
+Supabase is not configured. Returning fallback mock data.
+ GET /api/untangle-log 200 in 367ms

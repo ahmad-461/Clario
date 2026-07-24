@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
+import Link from "next/link";
 import { ClarioLogo } from "./ClarioLogo";
 
 export function SignatureFooter() {
@@ -108,7 +109,7 @@ export function SignatureFooter() {
 
         {/* Breakout Logo Mark exactly at the transition midpoint (50% horizontal) */}
         <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F4F6F9] p-3 rounded-full z-20 border border-[#E2E8F0] shadow-sm flex items-center justify-center transition-transform duration-300 hover:scale-110"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F4F6F9] p-3 rounded-full z-20 border border-[#E2E8F0] shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(13,148,136,0.25)] hover:border-[#0D9488]/30"
           title="Clario"
         >
           <ClarioLogo showWordmark={false} size="md" />
@@ -123,17 +124,25 @@ export function SignatureFooter() {
 
         {/* Quiet footer details at the absolute bottom */}
         <div className="absolute bottom-4 left-0 right-0 px-12 lg:px-16 flex justify-between items-center text-xs text-[#334155] font-semibold tracking-wide border-t border-[#E2E8F0]/50 pt-3">
-          <p className="max-w-xl text-left">
+          <p className="max-w-[45%] text-left">
             We value your trust. Clario processes all documents in real-time and never stores your raw text or file uploads.
           </p>
-          <p className="whitespace-nowrap">
+          <p className="text-center">
+            <Link
+              href="/untangle-log"
+              className="hover:text-[#0D9488] transition duration-150 underline decoration-dotted underline-offset-4 font-bold"
+            >
+              The Untangle Log
+            </Link>
+          </p>
+          <p className="whitespace-nowrap max-w-[45%] text-right">
             &copy; {new Date().getFullYear()} Clario. All rights reserved.
           </p>
         </div>
       </div>
 
       {/* MOBILE / TABLET LAYOUT (< lg breakpoint) */}
-      <div className="block lg:hidden max-w-2xl mx-auto px-6 py-12 flex flex-col gap-8">
+      <div className="flex lg:hidden flex-col gap-8 max-w-2xl mx-auto px-6 py-12">
         {/* Above-the-line sentence */}
         <p className="font-display text-xl md:text-2xl text-[#0F172A] leading-snug text-left md:text-center w-full font-medium">
           Every day, someone hands you something you don&apos;t understand.
@@ -187,7 +196,15 @@ export function SignatureFooter() {
           <p className="leading-relaxed max-w-md mx-auto">
             We value your trust. Clario processes all documents in real-time and never stores your raw text or file uploads.
           </p>
-          <p className="text-[#334155]/60 mt-2">
+          <p className="my-1">
+            <Link
+              href="/untangle-log"
+              className="hover:text-[#0D9488] transition duration-150 underline decoration-dotted underline-offset-4 font-bold"
+            >
+              The Untangle Log
+            </Link>
+          </p>
+          <p className="text-[#334155]/60">
             &copy; {new Date().getFullYear()} Clario. All rights reserved.
           </p>
         </div>
