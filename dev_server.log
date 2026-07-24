@@ -9,8 +9,8 @@
      · serverActions
 
  ✓ Starting...
- ✓ Ready in 1462ms
+ ✓ Ready in 1609ms
  ○ Compiling / ...
- ✓ Compiled / in 10.4s
- GET / 200 in 11778ms
- GET / 200 in 253ms
+ ✓ Compiled / in 11.2s
+ GET / 200 in 12650ms
+ GET / 200 in 251ms

@@ -159,52 +159,61 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
     >
-      <div className="relative w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
-        {/* Header / Tabs */}
-        <div className="flex border-b border-slate-200 bg-[#F4F6F9]/50 shrink-0">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("login");
-              setError("");
-              setInfoMessage("");
-            }}
-            className={`flex-1 py-4 text-center text-sm font-bold border-b-2 transition focus-visible:outline-none focus-visible:bg-slate-100 ${
-              activeTab === "login"
-                ? "border-[#0D9488] text-[#0D9488]"
-                : "border-transparent text-[#334155] hover:text-[#0F172A]"
-            }`}
-          >
-            Log In
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("signup");
-              setError("");
-              setInfoMessage("");
-            }}
-            className={`flex-1 py-4 text-center text-sm font-bold border-b-2 transition focus-visible:outline-none focus-visible:bg-slate-100 ${
-              activeTab === "signup"
-                ? "border-[#0D9488] text-[#0D9488]"
-                : "border-transparent text-[#334155] hover:text-[#0F172A]"
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+      <div className="relative w-full max-w-md bg-[#F4F6F9] rounded-2xl border border-[#E2E8F0] shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+        {/* Header / Tabs - Hidden during Forgot Password */}
+        {activeTab !== "forgot" && (
+          <div className="flex border-b border-[#E2E8F0] bg-white shrink-0 relative">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("login");
+                setError("");
+                setInfoMessage("");
+              }}
+              className={`flex-1 py-4 text-center text-xs md:text-sm font-bold transition-all duration-150 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0D9488] focus-visible:outline-none z-10 ${
+                activeTab === "login"
+                  ? "text-[#0D9488] bg-[#F4F6F9]/30"
+                  : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
+              }`}
+            >
+              Log In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("signup");
+                setError("");
+                setInfoMessage("");
+              }}
+              className={`flex-1 py-4 text-center text-xs md:text-sm font-bold transition-all duration-150 flex items-center justify-center focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0D9488] focus-visible:outline-none z-10 ${
+                activeTab === "signup"
+                  ? "text-[#0D9488] bg-[#F4F6F9]/30"
+                  : "text-[#475569] hover:text-[#0F172A] hover:bg-[#F4F6F9]/10"
+              }`}
+            >
+              Sign Up
+            </button>
 
-        {/* Close Button */}
+            {/* Premium Sliding active indicator bar matching Workspace Tabs */}
+            <div
+              className={`absolute bottom-0 left-0 h-0.5 w-1/2 bg-[#0D9488] transition-transform duration-300 ease-out z-20 ${
+                activeTab === "login" ? "translate-x-0" : "translate-x-full"
+              }`}
+            />
+          </div>
+        )}
+
+        {/* Close Button - Clean & repositioned */}
         <button
           type="button"
           onClick={onClose}
           aria-label="Close authentication modal"
-          className="absolute top-3.5 right-3.5 p-1.5 rounded-lg text-[#334155] hover:bg-slate-100 hover:text-slate-900 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] z-10"
+          className="absolute top-3.5 right-3.5 p-1.5 rounded-xl text-[#334155] hover:bg-[#E2E8F0]/50 hover:text-[#0F172A] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] z-50"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -212,7 +221,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
         </button>
 
         {/* Form Body - with flex-1 min-h-0 to enable correct nested scrolling */}
-        <form onSubmit={handleSubmit} className="p-6 md:p-8 flex flex-col gap-5 overflow-y-auto flex-1 min-h-0">
+        <form onSubmit={handleSubmit} className="p-6 md:p-8 flex flex-col gap-6 overflow-y-auto flex-1 min-h-0">
           <div className="text-center shrink-0">
             <h2 id="auth-modal-title" className="text-xl font-display font-medium text-slate-900">
               {activeTab === "login" && "Welcome Back to Clario"}
@@ -226,31 +235,34 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
             </p>
           </div>
 
-          {/* Optional Note on Signup */}
+          {/* Optional Note on Signup - Styled as soft quiet italic caption near the form */}
           {activeTab === "signup" && (
-            <div className="p-3 bg-teal-50 border border-teal-100 text-teal-800 rounded-xl text-xs font-semibold leading-relaxed shrink-0">
-              💡 <span className="font-bold text-[#0F766E]">Optional Account:</span> Creating an account is fully optional. Clario will always remain 100% free and usable without signing up. Accounts exist solely for saving your explanation history and remembering your preferred tone automatically.
-            </div>
+            <p className="text-[11px] text-[#475569] italic leading-relaxed text-center select-none">
+              <span className="font-extrabold not-italic text-[#0D9488] tracking-widest uppercase text-[10px] block mb-1">Optional Account</span>
+              Clario is 100% free and functional without signing up. An account only serves to remember your default tone and sync your explanation history.
+            </p>
           )}
 
-          {/* Error Message */}
+          {/* Error Message - styled high contrast soft red alert box */}
           {error && (
-            <div className="p-3.5 bg-red-50 border border-red-100 text-[#7F1D1D] rounded-xl text-xs md:text-sm font-semibold leading-relaxed animate-fade-in shrink-0" role="alert">
+            <div className="p-4 bg-[#FEF2F2] border border-[#991B1B]/15 text-[#7F1D1D] rounded-xl text-xs md:text-sm font-semibold leading-relaxed animate-fade-in shrink-0" role="alert">
+              <span className="font-extrabold text-[#7F1D1D] tracking-widest uppercase text-[10px] block mb-1">Error</span>
               {error}
             </div>
           )}
 
-          {/* Info Message */}
+          {/* Info Message - styled high contrast soft blue alert box */}
           {infoMessage && (
-            <div className="p-3.5 bg-[#EFF6FF] border border-blue-100 text-blue-800 rounded-xl text-xs md:text-sm font-semibold leading-relaxed animate-fade-in shrink-0">
+            <div className="p-4 bg-[#EFF6FF] border border-[#1E40AF]/15 text-[#1E40AF] rounded-xl text-xs md:text-sm font-semibold leading-relaxed animate-fade-in shrink-0">
+              <span className="font-extrabold text-[#1E40AF] tracking-widest uppercase text-[10px] block mb-1">Notice</span>
               {infoMessage}
             </div>
           )}
 
           {/* Form Fields */}
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="auth-email" className="text-xs font-bold text-slate-700">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="auth-email" className="text-xs font-bold text-[#475569] uppercase tracking-widest">
                 Email Address
               </label>
               <input
@@ -261,14 +273,14 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent text-slate-900 placeholder-slate-400 disabled:opacity-50"
+                className="px-4 py-3 rounded-xl border border-[#E2E8F0] text-sm text-slate-900 bg-[#F4F6F9] shadow-inner placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition disabled:opacity-50"
               />
             </div>
 
             {activeTab !== "forgot" && (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <label htmlFor="auth-password" className="text-xs font-bold text-slate-700">
+                  <label htmlFor="auth-password" className="text-xs font-bold text-[#475569] uppercase tracking-widest">
                     Password
                   </label>
                   {activeTab === "login" && (
@@ -281,7 +293,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
                         setPassword("");
                         setConfirmPassword("");
                       }}
-                      className="text-xs font-bold text-[#0D9488] hover:underline focus:outline-none"
+                      className="text-xs font-bold text-[#0D9488] hover:text-[#0F766E] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] rounded px-1 transition"
                     >
                       Forgot password?
                     </button>
@@ -295,14 +307,14 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent text-slate-900 placeholder-slate-400 disabled:opacity-50"
+                  className="px-4 py-3 rounded-xl border border-[#E2E8F0] text-sm text-slate-900 bg-[#F4F6F9] shadow-inner placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition disabled:opacity-50"
                 />
               </div>
             )}
 
             {activeTab === "signup" && (
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="auth-confirm-password" className="text-xs font-bold text-slate-700">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="auth-confirm-password" className="text-xs font-bold text-[#475569] uppercase tracking-widest">
                   Confirm Password
                 </label>
                 <input
@@ -313,7 +325,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent text-slate-900 placeholder-slate-400 disabled:opacity-50"
+                  className="px-4 py-3 rounded-xl border border-[#E2E8F0] text-sm text-slate-900 bg-[#F4F6F9] shadow-inner placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0D9488] focus:border-transparent transition disabled:opacity-50"
                 />
               </div>
             )}
@@ -323,11 +335,15 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-[#0D9488] hover:bg-[#0D9488]/90 text-white shadow transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0D9488] disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+            className={`w-full py-3.5 px-4 rounded-xl font-bold text-sm shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0D9488] flex items-center justify-center gap-2 shrink-0 ${
+              loading
+                ? "bg-[#0D9488]/10 text-[#0D9488]/40 border border-[#0D9488]/10 cursor-not-allowed scale-[0.98]"
+                : "bg-[#0D9488] text-white hover:bg-[#0D9488]/90 hover:shadow-lg active:scale-[0.98]"
+            }`}
           >
             {loading ? (
               <>
-                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-4 w-4 text-[#0D9488]" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -352,7 +368,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialTab = "login" }: 
                   setError("");
                   setInfoMessage("");
                 }}
-                className="text-xs font-bold text-[#0D9488] hover:underline focus:outline-none"
+                className="text-xs font-bold text-[#0D9488] hover:text-[#0F766E] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] rounded px-1.5 py-0.5 transition"
               >
                 Back to Log In
               </button>

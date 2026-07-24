@@ -18,6 +18,11 @@ export function Header({ onSessionChange, currentPage = "home" }: HeaderProps) {
   const [initialTab, setInitialTab] = useState<"login" | "signup">("login");
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const onSessionChangeRef = React.useRef(onSessionChange);
+  useEffect(() => {
+    onSessionChangeRef.current = onSessionChange;
+  }, [onSessionChange]);
+
   useEffect(() => {
     if (!supabaseClient) return;
 
@@ -25,7 +30,7 @@ export function Header({ onSessionChange, currentPage = "home" }: HeaderProps) {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      if (onSessionChange) onSessionChange(currentUser);
+      if (onSessionChangeRef.current) onSessionChangeRef.current(currentUser);
     });
 
     // Listen for auth state changes
@@ -33,14 +38,14 @@ export function Header({ onSessionChange, currentPage = "home" }: HeaderProps) {
       (_event, session) => {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        if (onSessionChange) onSessionChange(currentUser);
+        if (onSessionChangeRef.current) onSessionChangeRef.current(currentUser);
       }
     );
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [onSessionChange]);
+  }, []);
 
   const handleLogout = async () => {
     if (!supabaseClient) return;
@@ -130,24 +135,24 @@ export function Header({ onSessionChange, currentPage = "home" }: HeaderProps) {
                 History
               </Link>
 
-              {/* User Dropdown / Display */}
+              {/* User Dropdown / Display styled as a premium recessed pill */}
               <div className="relative user-menu-container">
                 <button
                   type="button"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   aria-expanded={dropdownOpen}
                   aria-haspopup="true"
-                  className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] rounded-xl p-1 hover:bg-slate-50 transition"
+                  className="flex items-center gap-2.5 px-3 py-1.5 bg-[#F4F6F9] border border-[#E2E8F0] shadow-inner rounded-full hover:bg-slate-100/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488]"
                 >
                   {/* Simple Avatar with Initials */}
-                  <div className="h-8 w-8 rounded-full bg-[#0D9488] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  <div className="h-7 w-7 rounded-full bg-[#0D9488] text-white flex items-center justify-center font-bold text-xs shadow-sm shrink-0">
                     {user.email?.charAt(0).toUpperCase() || "U"}
                   </div>
-                  <span className="hidden md:inline text-xs font-bold text-slate-700 max-w-[150px] truncate">
+                  <span className="hidden md:inline text-xs font-bold text-slate-700 max-w-[140px] truncate select-none">
                     {user.email}
                   </span>
                   <svg
-                    className={`h-4 w-4 text-slate-500 transition-transform duration-150 ${
+                    className={`h-3.5 w-3.5 text-slate-500 transition-transform duration-150 shrink-0 ${
                       dropdownOpen ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -161,15 +166,15 @@ export function Header({ onSessionChange, currentPage = "home" }: HeaderProps) {
 
                 {/* Dropdown Menu */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 animate-fade-in">
-                    <div className="px-4 py-2 border-b border-slate-100 md:hidden">
-                      <p className="text-xs font-bold text-slate-500 truncate">Account</p>
-                      <p className="text-xs font-bold text-slate-800 truncate mt-0.5">{user.email}</p>
+                  <div className="absolute right-0 mt-2 w-52 bg-white border border-[#E2E8F0] rounded-2xl shadow-xl py-1.5 z-[100] animate-fade-in">
+                    <div className="px-4 py-2.5 border-b border-[#E2E8F0] md:hidden">
+                      <p className="text-[10px] font-bold text-[#475569] uppercase tracking-widest">Account</p>
+                      <p className="text-xs font-bold text-slate-800 truncate mt-1">{user.email}</p>
                     </div>
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2.5 text-sm font-bold text-[#7F1D1D] hover:bg-red-50 hover:text-[#7F1D1D] transition focus-visible:outline-none focus-visible:bg-red-50"
+                      className="w-full text-left px-4 py-2.5 text-sm font-bold text-[#7F1D1D] hover:bg-red-50/50 hover:text-[#7F1D1D] transition focus-visible:outline-none focus-visible:bg-red-50/50 rounded-b-xl"
                     >
                       Log Out
                     </button>
