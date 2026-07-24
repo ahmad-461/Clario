@@ -64,19 +64,20 @@ export function SignatureFooter() {
       {/* Background Atmosphere - elegant, high-contrast, calm */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#0D9488]/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* DESKTOP LAYOUT (lg breakpoint and up) */}
-      <div className="hidden lg:block relative max-w-7xl w-full mx-auto px-12 lg:px-16 h-[380px]">
-        {/* Above-the-line sentence (left-aligned, over the chaotic portion) */}
-        <div className="absolute top-12 left-12 max-w-md">
-          <p className="font-display text-2xl lg:text-3xl text-[#0F172A] leading-tight font-medium">
+      {/* UNIFIED RESPONSIBLE LAYOUT - Combines Desktop and Mobile into a single DOM footprint */}
+      <div className="relative max-w-7xl w-full mx-auto px-6 md:px-12 lg:px-16 flex flex-col lg:block lg:h-[380px] py-12 lg:py-0 gap-8 lg:gap-0">
+
+        {/* Above-the-line sentence */}
+        <div className="lg:absolute lg:top-12 lg:left-12 xl:left-16 lg:max-w-md w-full">
+          <p className="font-display text-[#0F172A] font-medium leading-snug lg:leading-tight text-xl md:text-2xl lg:text-2xl xl:text-3xl text-left md:text-center lg:text-left">
             Every day, someone hands you something you don&apos;t understand.
           </p>
         </div>
 
         {/* Full-bleed "The Untangled Line" SVG horizon container */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[120px] w-full pointer-events-none">
+        <div className="relative lg:absolute lg:inset-x-0 lg:top-1/2 lg:-translate-y-1/2 h-[120px] w-full my-2 lg:my-0">
           <svg
-            className="w-full h-full"
+            className="w-full h-full pointer-events-none"
             viewBox="0 0 1200 120"
             preserveAspectRatio="none"
             fill="none"
@@ -105,98 +106,29 @@ export function SignatureFooter() {
               }}
             />
           </svg>
-        </div>
 
-        {/* Breakout Logo Mark exactly at the transition midpoint (50% horizontal) */}
-        <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F4F6F9] p-3 rounded-full z-20 border border-[#E2E8F0] shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(13,148,136,0.25)] hover:border-[#0D9488]/30"
-          title="Clario"
-        >
-          <ClarioLogo showWordmark={false} size="md" />
-        </div>
-
-        {/* Below-the-line sentence (right-aligned, over the resolved portion) */}
-        <div className="absolute bottom-16 right-12 max-w-md text-right">
-          <p className="font-display text-2xl lg:text-3xl text-[#0F172A] leading-tight font-medium">
-            Clario makes sure that&apos;s not the end of the story.
-          </p>
-        </div>
-
-        {/* Quiet footer details at the absolute bottom */}
-        <div className="absolute bottom-4 left-0 right-0 px-12 lg:px-16 flex justify-between items-center text-xs text-[#334155] font-semibold tracking-wide border-t border-[#E2E8F0]/50 pt-3">
-          <p className="max-w-[45%] text-left">
-            We value your trust. Clario processes all documents in real-time and never stores your raw text or file uploads.
-          </p>
-          <p className="text-center">
-            <Link
-              href="/untangle-log"
-              className="hover:text-[#0D9488] transition duration-150 underline decoration-dotted underline-offset-4 font-bold"
-            >
-              The Untangle Log
-            </Link>
-          </p>
-          <p className="whitespace-nowrap max-w-[45%] text-right">
-            &copy; {new Date().getFullYear()} Clario. All rights reserved.
-          </p>
-        </div>
-      </div>
-
-      {/* MOBILE / TABLET LAYOUT (< lg breakpoint) */}
-      <div className="flex lg:hidden flex-col gap-8 max-w-2xl mx-auto px-6 py-12">
-        {/* Above-the-line sentence */}
-        <p className="font-display text-xl md:text-2xl text-[#0F172A] leading-snug text-left md:text-center w-full font-medium">
-          Every day, someone hands you something you don&apos;t understand.
-        </p>
-
-        {/* SVG horizon container (height-confined, with absolute-centered Logo Mark) */}
-        <div className="relative w-full h-[120px] my-2">
-          <svg
-            className="w-full h-full"
-            viewBox="0 0 1200 120"
-            preserveAspectRatio="none"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
+          {/* Breakout Logo Mark exactly at the transition midpoint */}
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F4F6F9] p-2.5 lg:p-3 rounded-full z-20 border border-[#E2E8F0] shadow-sm flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(13,148,136,0.25)] hover:border-[#0D9488]/30"
+            title="Clario"
           >
-            <defs>
-              <linearGradient id="untangledGradientMobile" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#0F172A" />
-                <stop offset="50%" stopColor="#0F172A" />
-                <stop offset="50%" stopColor="#0D9488" />
-                <stop offset="100%" stopColor="#0D9488" />
-              </linearGradient>
-            </defs>
-            <path
-              d={svgPath}
-              stroke="url(#untangledGradientMobile)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{
-                strokeDasharray: pathLength || 1350,
-                strokeDashoffset: isIntersecting ? 0 : (pathLength || 1350),
-                transition: "stroke-dashoffset 2.2s cubic-bezier(0.25, 1, 0.5, 1)",
-              }}
-            />
-          </svg>
-
-          {/* Absolute-centered Logo Mark on the line */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#F4F6F9] p-2.5 rounded-full z-20 border border-[#E2E8F0] shadow-sm flex items-center justify-center">
             <ClarioLogo showWordmark={false} size="md" />
           </div>
         </div>
 
         {/* Below-the-line sentence */}
-        <p className="font-display text-xl md:text-2xl text-[#0F172A] leading-snug text-right md:text-center w-full font-medium self-end md:self-auto">
-          Clario makes sure that&apos;s not the end of the story.
-        </p>
+        <div className="lg:absolute lg:bottom-16 lg:right-12 xl:right-16 lg:max-w-md w-full text-right md:text-center lg:text-right self-end md:self-auto">
+          <p className="font-display text-[#0F172A] font-medium leading-snug lg:leading-tight text-xl md:text-2xl lg:text-2xl xl:text-3xl">
+            Clario makes sure that&apos;s not the end of the story.
+          </p>
+        </div>
 
-        {/* Quiet details block */}
-        <div className="flex flex-col gap-4 text-xs text-[#334155] font-semibold tracking-wide border-t border-[#E2E8F0] pt-6 text-center">
-          <p className="leading-relaxed max-w-md mx-auto">
+        {/* Quiet footer details at the bottom */}
+        <div className="w-full border-t border-[#E2E8F0] lg:border-[#E2E8F0]/50 pt-6 lg:pt-3 flex flex-col lg:flex-row justify-between items-center text-xs text-[#334155] font-semibold tracking-wide text-center lg:text-left gap-4 lg:gap-0 lg:absolute lg:bottom-4 lg:inset-x-12 xl:inset-x-16 lg:px-0">
+          <p className="leading-relaxed max-w-md lg:max-w-[45%] mx-auto lg:mx-0 text-center lg:text-left">
             We value your trust. Clario processes all documents in real-time and never stores your raw text or file uploads.
           </p>
-          <p className="my-1">
+          <p className="my-1 lg:my-0 lg:text-center">
             <Link
               href="/untangle-log"
               className="hover:text-[#0D9488] transition duration-150 underline decoration-dotted underline-offset-4 font-bold"
@@ -204,10 +136,11 @@ export function SignatureFooter() {
               The Untangle Log
             </Link>
           </p>
-          <p className="text-[#334155]/60">
+          <p className="whitespace-nowrap text-[#334155]/60 lg:text-[#334155] max-w-md lg:max-w-[45%] mx-auto lg:mx-0 text-center lg:text-right">
             &copy; {new Date().getFullYear()} Clario. All rights reserved.
           </p>
         </div>
+
       </div>
     </footer>
   );
