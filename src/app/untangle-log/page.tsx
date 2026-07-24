@@ -170,7 +170,7 @@ export default function UntangleLogPage() {
               The Untangle Log
             </h1>
             <p className="font-display font-medium text-[#334155] leading-relaxed text-lg italic">
-              &ldquo;Every number here represents a moment of confusion, resolved.&rdquo;
+              &ldquo;Every number here represents a moment where someone chose to understand before they signed, clicked, or trusted.&rdquo;
             </p>
           </div>
 
@@ -179,7 +179,7 @@ export default function UntangleLogPage() {
               Anonymized Metrics Only
             </span>
             <p className="text-xs text-[#334155] font-semibold leading-relaxed">
-              To guarantee your safety, Clario never logs or saves original text or files. We record only anonymous, high-level parameters to track our direct impact together.
+              To guarantee your safety, Clario never logs or saves original text or files. We record only anonymous, high-level parameters to track our direct impact in helping people understand before they decide.
             </p>
           </div>
         </div>

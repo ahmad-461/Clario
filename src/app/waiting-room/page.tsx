@@ -606,10 +606,10 @@ export default function WaitingRoomPage() {
             <span>The Waiting Room</span>
           </div>
           <h1 className="font-display font-medium text-[#0F172A] leading-tight text-3xl md:text-5xl lg:text-6xl tracking-[-0.03em]">
-            Let&apos;s read it <span className="text-[#0D9488] italic font-semibold">together.</span>
+            Let&apos;s understand it <span className="text-[#0D9488] italic font-semibold">together, before either of you decides.</span>
           </h1>
           <p className="text-base md:text-lg text-[#334155] font-semibold leading-relaxed max-w-2xl">
-            This space is designed specifically for two people reading confusing things at the same screen. One of you receives the text; one helps understand it. Clario frames everything in warm, cooperative language with talking points to guide your conversation.
+            This space is designed specifically for two people reading confusing documents at the same screen. One of you receives the text; one helps make sense of it—so you can protect each other and understand before anyone signs, clicks, or trusts. Clario frames everything in warm, cooperative language with talking points to guide your conversation.
           </p>
         </div>
       </section>
