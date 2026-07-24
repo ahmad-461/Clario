@@ -203,6 +203,16 @@ export default function WaitingRoomPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Local/frontend validation check
+    if (inputMode === "text" && !inputText.trim()) {
+      setError("Please paste some text to explain.");
+      return;
+    }
+    if (inputMode === "file" && !selectedFile) {
+      setError("Please upload a PDF or an image (JPG, PNG, WEBP) only.");
+      return;
+    }
+
     const canSubmit = inputMode === "text" ? inputText.trim() : selectedFile;
     if (!canSubmit) return;
 

@@ -9,9 +9,20 @@
      · serverActions
 
  ✓ Starting...
- ✓ Ready in 1726ms
+ ✓ Ready in 1432ms
  ○ Compiling / ...
- ✓ Compiled / in 9.2s
- HEAD / 200 in 10455ms
- GET / 200 in 466ms
- GET / 200 in 239ms
+ ✓ Compiled / in 11.8s
+ GET / 200 in 13653ms
+ ○ Compiling /waiting-room ...
+ ✓ Compiled /waiting-room in 1214ms
+ GET /waiting-room 200 in 1556ms
+ GET / 200 in 262ms
+ GET / 200 in 215ms
+ GET / 200 in 231ms
+ GET /waiting-room 200 in 212ms
+ GET / 200 in 298ms
+ GET / 200 in 221ms
+ GET /waiting-room 200 in 223ms
+ GET / 200 in 223ms
+ GET / 200 in 406ms
+ GET / 200 in 240ms

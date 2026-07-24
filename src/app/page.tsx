@@ -28,6 +28,7 @@ export default function Home() {
 
   // Speech Recognition State
   const [isListening, setIsListening] = useState(false);
+  const [voiceWarning, setVoiceWarning] = useState("");
   const [speechSupported, setSpeechSupported] = useState<boolean | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
@@ -72,7 +73,14 @@ export default function Home() {
         if (transcript) {
           setInputText((prev) => {
             const separator = prev.trim() === "" ? "" : " ";
-            return prev + separator + transcript;
+            const combined = prev + separator + transcript;
+            if (combined.length >= 5000) {
+              setVoiceWarning("Voice input stopped — you've reached the 5,000 character limit.");
+              // Stop the active speech recognition instance and set isListening to false
+              recognition.stop();
+              return combined.substring(0, 5000);
+            }
+            return combined;
           });
         }
       };
@@ -286,6 +294,9 @@ export default function Home() {
   // Handle Input Change
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
+    if (voiceWarning) {
+      setVoiceWarning("");
+    }
   };
 
   // Handle File Selection
@@ -391,6 +402,16 @@ export default function Home() {
   // Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Local/frontend validation check
+    if (inputMode === "text" && !inputText.trim()) {
+      setError("Please paste some text to explain.");
+      return;
+    }
+    if (inputMode === "file" && !selectedFile) {
+      setError("Please upload a PDF or an image (JPG, PNG, WEBP) only.");
+      return;
+    }
 
     const canSubmit = inputMode === "text" ? inputText.trim() : selectedFile;
     if (!canSubmit) return;
@@ -541,6 +562,7 @@ export default function Home() {
   const handleReset = () => {
     stopSpeaking();
     setInputText("");
+    setVoiceWarning("");
     setSelectedFile(null);
     setPdfPageCount(null);
     if (imagePreviewUrl) {
@@ -1078,13 +1100,21 @@ export default function Home() {
                         {inputText.length > 0 && !isLoading && (
                           <button
                             type="button"
-                            onClick={() => setInputText("")}
+                            onClick={() => {
+                              setInputText("");
+                              setVoiceWarning("");
+                            }}
                             className="text-xs font-bold text-[#0D9488] hover:text-[#0D9488]/80 transition duration-150 animate-fade-in focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none rounded uppercase tracking-wider"
                           >
                             Clear Input
                           </button>
                         )}
                       </div>
+                      {voiceWarning && (
+                        <div className="px-6 py-2.5 bg-[#FEF2F2] border-t border-[#E2E8F0] text-sm text-[#7F1D1D] font-bold animate-fade-in">
+                          {voiceWarning}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <>
