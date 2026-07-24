@@ -6,6 +6,7 @@ import { Header } from "../Header";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { User } from "@supabase/supabase-js";
 import { AuthModal } from "../AuthModal";
+import { SignatureFooter } from "../SignatureFooter";
 
 interface HistoryEntry {
   id: string;
@@ -320,10 +321,8 @@ export default function HistoryPage() {
         )}
       </main>
 
-      {/* Footer copyright */}
-      <footer className="w-full text-center py-8 border-t border-slate-200 mt-16 text-xs font-semibold text-slate-500">
-        &copy; {new Date().getFullYear()} Clario. All history and preferences are fully private.
-      </footer>
+      {/* Signature Footer */}
+      <SignatureFooter />
 
       {/* Client auth trigger helper */}
       <AuthModal
