@@ -8,6 +8,7 @@ import { ClarioThreadLine } from "./ClarioThreadLine";
 import { SignatureFooter } from "./SignatureFooter";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { User } from "@supabase/supabase-js";
+import { CHARACTER_LIMIT, FILE_SIZE_LIMIT_BYTES } from "@/lib/constants";
 
 const TONES = [
   { id: "simple", label: "Simple" },
@@ -26,17 +27,44 @@ export default function Home() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Web Speech API TypeScript Declarations
+  interface SpeechRecognitionEvent {
+    resultIndex: number;
+    results: {
+      [index: number]: {
+        [index: number]: {
+          transcript: string;
+        };
+      };
+    };
+  }
+
+  interface SpeechRecognitionErrorEvent {
+    error: string;
+  }
+
+  interface ISpeechRecognition {
+    continuous: boolean;
+    interimResults: boolean;
+    lang: string;
+    onstart: (() => void) | null;
+    onresult: ((event: SpeechRecognitionEvent) => void) | null;
+    onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+    onend: (() => void) | null;
+    start: () => void;
+    stop: () => void;
+  }
+
   // Speech Recognition State
   const [isListening, setIsListening] = useState(false);
   const [voiceWarning, setVoiceWarning] = useState("");
   const [speechSupported, setSpeechSupported] = useState<boolean | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
+  const [recognitionInstance, setRecognitionInstance] = useState<ISpeechRecognition | null>(null);
 
   // Detect Speech Recognition Support
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // @ts-expect-error - SpeechRecognition is not standard in standard DOM lib yet
+      // @ts-expect-error - SpeechRecognition is webkit-prefixed in Safari/iOS Chrome
       const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
       setSpeechSupported(!!SpeechRecognitionClass);
     }
@@ -55,9 +83,9 @@ export default function Home() {
     }
 
     try {
-      // @ts-expect-error - SpeechRecognition is not standard in standard DOM lib yet
+      // @ts-expect-error - SpeechRecognition is webkit-prefixed in Safari/iOS Chrome
       const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognitionClass();
+      const recognition = new SpeechRecognitionClass() as ISpeechRecognition;
       recognition.continuous = true;
       recognition.interimResults = false;
       recognition.lang = "en-US";
@@ -66,27 +94,25 @@ export default function Home() {
         setIsListening(true);
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const resultIndex = event.resultIndex;
         const transcript = event.results[resultIndex][0].transcript;
         if (transcript) {
           setInputText((prev) => {
             const separator = prev.trim() === "" ? "" : " ";
             const combined = prev + separator + transcript;
-            if (combined.length >= 5000) {
+            if (combined.length >= CHARACTER_LIMIT) {
               setVoiceWarning("Voice input stopped — you've reached the 5,000 character limit.");
               // Stop the active speech recognition instance and set isListening to false
               recognition.stop();
-              return combined.substring(0, 5000);
+              return combined.substring(0, CHARACTER_LIMIT);
             }
             return combined;
           });
         }
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
         setIsListening(false);
       };
@@ -180,9 +206,6 @@ export default function Home() {
       stopSpeaking();
     };
   }, []);
-
-  // Constants
-  const CHARACTER_LIMIT = 5000;
 
   // Cleanup Preview URLs
   useEffect(() => {
@@ -309,7 +332,7 @@ export default function Home() {
     }
 
     // 1. Validate File Size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > FILE_SIZE_LIMIT_BYTES) {
       setError("The file is too large. Max file size is 5MB.");
       setSelectedFile(null);
       return;
@@ -1258,9 +1281,9 @@ export default function Home() {
                 {error && (
                   <div
                     role="alert"
-                    className="p-4 bg-[#FEF2F2] border border-[#991B1B]/15 rounded-xl flex flex-col gap-1 animate-fade-in text-[#7F1D1D]"
+                    className="p-4 bg-[#FEF2F2] border border-[#7F1D1D]/15 rounded-xl flex flex-col gap-1 animate-fade-in text-[#7F1D1D]"
                   >
-                    <span className="text-sm font-extrabold tracking-wide uppercase">Error</span>
+                    <span className="text-xs font-extrabold tracking-widest uppercase">Error</span>
                     <p className="text-sm font-semibold">{error}</p>
                   </div>
                 )}

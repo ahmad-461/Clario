@@ -143,7 +143,7 @@ export default function HistoryPage() {
       <Header onSessionChange={(currentUser) => setUser(currentUser)} currentPage="history" />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-12 flex flex-col gap-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-6 md:px-12 lg:px-16 py-12 md:py-16 flex flex-col gap-8">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-display font-medium text-slate-900">
             Your Explanation History
@@ -190,8 +190,9 @@ export default function HistoryPage() {
 
         {/* Error Display */}
         {error && !loading && (
-          <div className="p-4 bg-red-50 border border-red-200 text-[#7F1D1D] rounded-xl text-sm font-semibold animate-fade-in">
-            {error}
+          <div role="alert" className="p-4 bg-[#FEF2F2] border border-[#7F1D1D]/15 rounded-xl flex flex-col gap-1 text-[#7F1D1D] animate-fade-in">
+            <span className="text-xs font-extrabold tracking-widest uppercase">Error</span>
+            <p className="text-sm font-semibold">{error}</p>
           </div>
         )}
 
@@ -285,7 +286,7 @@ export default function HistoryPage() {
                         type="button"
                         onClick={() => handleDelete(item.id)}
                         disabled={deletingId === item.id}
-                        className="text-xs font-bold text-[#7F1D1D] hover:underline focus:outline-none disabled:opacity-50 flex items-center gap-1"
+                        className="text-xs font-bold text-[#7F1D1D] hover:underline focus:outline-none disabled:opacity-50 flex items-center gap-1 active:scale-[0.98] transition-transform"
                       >
                         {deletingId === item.id ? (
                           <>
@@ -308,7 +309,7 @@ export default function HistoryPage() {
                       <button
                         type="button"
                         onClick={() => handleViewDetails(item)}
-                        className="px-4 py-2 bg-[#0D9488] text-white hover:bg-[#0D9488]/90 font-bold rounded-xl text-xs shadow-sm transition"
+                        className="px-4 py-2 bg-[#0D9488] text-white hover:bg-[#0D9488]/90 font-bold rounded-xl text-xs shadow-sm active:scale-[0.98] hover:shadow-md transition duration-150"
                       >
                         View Full Explanation &rarr;
                       </button>

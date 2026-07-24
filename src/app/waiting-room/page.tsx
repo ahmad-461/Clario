@@ -6,6 +6,7 @@ import { Header } from "../Header";
 import { SignatureFooter } from "../SignatureFooter";
 import { supabaseClient } from "@/lib/supabaseClient";
 import { User } from "@supabase/supabase-js";
+import { CHARACTER_LIMIT, FILE_SIZE_LIMIT_BYTES } from "@/lib/constants";
 
 const TONES = [
   { id: "simple", label: "Simple" },
@@ -38,8 +39,6 @@ export default function WaitingRoomPage() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-
-  const CHARACTER_LIMIT = 5000;
 
   // Cleanup Preview URLs
   useEffect(() => {
@@ -114,7 +113,7 @@ export default function WaitingRoomPage() {
       setImagePreviewUrl(null);
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > FILE_SIZE_LIMIT_BYTES) {
       setError("The file is too large. Max file size is 5MB.");
       setSelectedFile(null);
       return;
@@ -838,8 +837,8 @@ export default function WaitingRoomPage() {
               </div>
 
               {error && (
-                <div role="alert" className="p-4 bg-[#FEF2F2] border border-[#991B1B]/15 rounded-xl flex flex-col gap-1 text-[#7F1D1D] animate-fade-in">
-                  <span className="text-xs font-bold uppercase tracking-wider">Error</span>
+                <div role="alert" className="p-4 bg-[#FEF2F2] border border-[#7F1D1D]/15 rounded-xl flex flex-col gap-1 text-[#7F1D1D] animate-fade-in">
+                  <span className="text-xs font-extrabold tracking-widest uppercase">Error</span>
                   <p className="text-sm font-semibold">{error}</p>
                 </div>
               )}
@@ -847,12 +846,12 @@ export default function WaitingRoomPage() {
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
-                className={`w-full px-8 py-4 rounded-xl font-bold text-base shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                className={`w-full px-8 py-4 rounded-xl font-bold text-base shadow-md transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none active:scale-[0.98] ${
                   isLoading
                     ? "bg-[#0D9488] text-white cursor-not-allowed scale-[0.98]"
                     : isSubmitDisabled
                     ? "bg-[#0D9488]/10 text-[#0D9488]/40 border border-[#0D9488]/10 cursor-not-allowed shadow-none"
-                    : "bg-[#0D9488] text-white hover:bg-[#0D9488]/90 hover:shadow-lg active:scale-[0.98]"
+                    : "bg-[#0D9488] text-white hover:bg-[#0D9488]/90 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:hover:scale-[0.98] transition-transform"
                 }`}
               >
                 {isLoading ? "Analyzing together..." : "Explain this for both of us"}
