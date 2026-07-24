@@ -56,8 +56,15 @@ const RESPONSE_SCHEMA: Schema = {
       type: SchemaType.STRING,
       description: "A short 1 sentence explanation of why confidence is at that level. Gently suggest consulting a professional (like lawyer, doctor, accountant, etc.) if confidenceLevel is 'low'.",
     },
+    talkingPoints: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.STRING,
+      },
+      description: "2-3 short, concrete conversational talking points or questions the two readers (e.g. an adult child helping an elderly parent) could discuss together (e.g. 'Ask them: does this deadline feel rushed to you too?'). Must be empty array if companionMode is inactive.",
+    },
   },
-  required: ["explanation", "riskLevel", "riskReason", "manipulationFlags", "confidenceLevel", "confidenceNote"],
+  required: ["explanation", "riskLevel", "riskReason", "manipulationFlags", "confidenceLevel", "confidenceNote", "talkingPoints"],
 };
 
 export async function POST(request: Request) {
@@ -65,6 +72,7 @@ export async function POST(request: Request) {
     const contentType = request.headers.get("content-type") || "";
     let text = "";
     let tone = "simple";
+    let companionMode = false;
     let file: File | null = null;
     let inputType: "text" | "pdf" | "image" = "text";
     let pdfPageCount: number | null = null;
@@ -103,6 +111,7 @@ export async function POST(request: Request) {
       }
       text = (formData.get("text") as string) || "";
       tone = (formData.get("tone") as string) || "simple";
+      companionMode = formData.get("companionMode") === "true";
       file = formData.get("file") as File | null;
     } else {
       // JSON body
@@ -117,6 +126,7 @@ export async function POST(request: Request) {
       }
       text = body.text || "";
       tone = body.tone || "simple";
+      companionMode = !!body.companionMode;
     }
 
     // 2. Validate Tone
@@ -139,9 +149,15 @@ export async function POST(request: Request) {
 
     // 4. Initialize Gemini SDK
     const genAI = new GoogleGenerativeAI(apiKey);
+
+    // Adapt system instruction if companionMode is active to be warmer and framed for two people reading together
+    const modifiedSystemInstruction = companionMode
+      ? `${systemInstruction} Framed for two people looking at/reading the same document or message together (e.g. an adult child helping an elderly parent, or a teacher with a student). Make the explanation feel distinctly warmer, collaborative, and more relational. Use second-person-plural framing naturally where appropriate (e.g. "We can understand this as...", "Let's look at this part together...") without being gimmicky.`
+      : systemInstruction;
+
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
-      systemInstruction: systemInstruction,
+      systemInstruction: modifiedSystemInstruction,
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: RESPONSE_SCHEMA,
@@ -210,7 +226,7 @@ export async function POST(request: Request) {
           ? extractedText.substring(0, 150000) + "\n\n[Truncated due to length]"
           : extractedText;
 
-        const prompt = `Please carefully analyze the following text extracted from a PDF. You have four main tasks:
+        const prompt = `Please carefully analyze the following text extracted from a PDF. You have five main tasks:
 1. Simplify and explain the text clearly according to your system instructions for the requested tone.
 2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
@@ -219,6 +235,9 @@ export async function POST(request: Request) {
    - MEDIUM: the text is understandable but has some ambiguous, unusual, or context-dependent parts
    - LOW: the text is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
    - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
+5. Provide talkingPoints according to these rules:
+   - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
+   - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].
 
 Text to analyze:
 """
@@ -240,7 +259,7 @@ ${finalPdfText}
           },
         };
 
-        const prompt = `Please carefully analyze the attached image. You have four main tasks:
+        const prompt = `Please carefully analyze the attached image. You have five main tasks:
 1. Simplify and explain the text or visual content clearly according to your system instructions for the requested tone.
 2. Analyze the content for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 3. Analyze the content for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
@@ -248,7 +267,10 @@ ${finalPdfText}
    - HIGH: the text/image is a common, well-understood type of document/message (standard contract language, common scam patterns, typical bills/notices, everyday messages)
    - MEDIUM: the text/image is understandable but has some ambiguous, unusual, or context-dependent parts
    - LOW: the text/image is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
-   - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.`;
+   - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
+5. Provide talkingPoints according to these rules:
+   - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
+   - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].`;
 
         result = await model.generateContent([prompt, imagePart]);
       }
@@ -270,7 +292,7 @@ ${finalPdfText}
         );
       }
 
-      const prompt = `Please carefully analyze the following text. You have four main tasks:
+      const prompt = `Please carefully analyze the following text. You have five main tasks:
 1. Simplify and explain the text clearly according to your system instructions for the requested tone.
 2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
 3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
@@ -279,6 +301,9 @@ ${finalPdfText}
    - MEDIUM: the text is understandable but has some ambiguous, unusual, or context-dependent parts
    - LOW: the text is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
    - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
+5. Provide talkingPoints according to these rules:
+   - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
+   - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].
 
 Text to analyze:
 """
@@ -308,10 +333,10 @@ ${text}
       );
     }
 
-    const { explanation, riskLevel, riskReason, manipulationFlags, confidenceLevel, confidenceNote } = parsedResponse;
+    const { explanation, riskLevel, riskReason, manipulationFlags, confidenceLevel, confidenceNote, talkingPoints } = parsedResponse;
 
     // Validate properties
-    if (!explanation || !riskLevel || typeof riskReason !== "string" || !Array.isArray(manipulationFlags) || !confidenceLevel || typeof confidenceNote !== "string") {
+    if (!explanation || !riskLevel || typeof riskReason !== "string" || !Array.isArray(manipulationFlags) || !confidenceLevel || typeof confidenceNote !== "string" || !Array.isArray(talkingPoints)) {
       throw new Error("Response JSON does not contain all required fields");
     }
 
@@ -349,6 +374,7 @@ ${text}
       manipulationFlags,
       confidenceLevel,
       confidenceNote,
+      talkingPoints,
       ...(pdfPageCount !== null ? { pdfPageCount } : {}),
     });
 
