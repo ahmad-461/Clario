@@ -28,6 +28,7 @@ export default function WaitingRoomPage() {
   const [riskLevel, setRiskLevel] = useState("");
   const [riskReason, setRiskReason] = useState("");
   const [manipulationFlags, setManipulationFlags] = useState<string[]>([]);
+  const [omissionFlags, setOmissionFlags] = useState<string[]>([]);
   const [confidenceLevel, setConfidenceLevel] = useState("");
   const [confidenceNote, setConfidenceNote] = useState("");
   const [talkingPoints, setTalkingPoints] = useState<string[]>([]);
@@ -211,6 +212,7 @@ export default function WaitingRoomPage() {
     setRiskLevel("");
     setRiskReason("");
     setManipulationFlags([]);
+    setOmissionFlags([]);
     setConfidenceLevel("");
     setConfidenceNote("");
     setTalkingPoints([]);
@@ -247,6 +249,7 @@ export default function WaitingRoomPage() {
       setRiskLevel(data.riskLevel || "low");
       setRiskReason(data.riskReason || "");
       setManipulationFlags(data.manipulationFlags || []);
+      setOmissionFlags(data.omissionFlags || []);
       setConfidenceLevel(data.confidenceLevel || "high");
       setConfidenceNote(data.confidenceNote || "");
       setTalkingPoints(data.talkingPoints || []);
@@ -324,6 +327,14 @@ export default function WaitingRoomPage() {
         textToCopy += `\n`;
       }
 
+      if (omissionFlags && omissionFlags.length > 0) {
+        textToCopy += `What's Missing:\n`;
+        omissionFlags.forEach((flag) => {
+          textToCopy += `- ${flag}\n`;
+        });
+        textToCopy += `\n`;
+      }
+
       if (talkingPoints && talkingPoints.length > 0) {
         textToCopy += `Discussion Points:\n`;
         talkingPoints.forEach((point) => {
@@ -354,6 +365,7 @@ export default function WaitingRoomPage() {
     setRiskLevel("");
     setRiskReason("");
     setManipulationFlags([]);
+    setOmissionFlags([]);
     setConfidenceLevel("");
     setConfidenceNote("");
     setTalkingPoints([]);
@@ -487,6 +499,51 @@ export default function WaitingRoomPage() {
               }}>
                 {talkingPoints.map((point, idx) => (
                   <li key={idx} style={{ marginBottom: "6px" }}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Omission Flags (What's Missing) (If present) */}
+          {omissionFlags && omissionFlags.length > 0 && (
+            <div style={{
+              backgroundColor: "#F8FAFC",
+              border: "1.5px dashed #94A3B8",
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "30px",
+            }}>
+              <span style={{
+                fontSize: "13px",
+                fontWeight: "900",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#334155",
+                display: "block",
+                marginBottom: "4px"
+              }}>
+                WHAT&apos;S MISSING
+              </span>
+              <span style={{
+                fontSize: "12px",
+                fontWeight: "600",
+                color: "#475569",
+                display: "block",
+                marginBottom: "12px"
+              }}>
+                Sometimes what&apos;s left out matters as much as what&apos;s said.
+              </span>
+              <ul style={{
+                fontSize: "15px",
+                fontWeight: "700",
+                lineHeight: "1.5",
+                margin: "0",
+                paddingLeft: "20px",
+                color: "#334155",
+                listStyleType: "disc",
+              }}>
+                {omissionFlags.map((flag, idx) => (
+                  <li key={idx} style={{ marginBottom: "6px" }}>{flag}</li>
                 ))}
               </ul>
             </div>
@@ -981,6 +1038,13 @@ export default function WaitingRoomPage() {
                       Manipulation Observed
                     </span>
                   )}
+
+                  {/* Omissions Badge */}
+                  {omissionFlags && omissionFlags.length > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#F8FAFC] text-[#334155] border border-[#94A3B8]/30 uppercase tracking-wide">
+                      Notable Omissions Found
+                    </span>
+                  )}
                 </div>
 
                 {/* Show confidence explanation */}
@@ -1018,6 +1082,25 @@ export default function WaitingRoomPage() {
                     <ul className="list-disc pl-5 space-y-1">
                       {manipulationFlags.map((flag, idx) => (
                         <li key={idx}>{flag}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Omissions Callout Box (What's Missing) */}
+                {omissionFlags && omissionFlags.length > 0 && (
+                  <div className="p-5 bg-[#F8FAFC] border border-dashed border-[#94A3B8] text-[#334155] rounded-xl text-xs md:text-sm font-semibold leading-relaxed space-y-3">
+                    <div className="space-y-0.5">
+                      <p className="font-extrabold tracking-wide uppercase text-[11px] text-[#334155]">
+                        What&apos;s Missing
+                      </p>
+                      <p className="text-[#475569] text-xs">
+                        Sometimes what&apos;s left out matters as much as what&apos;s said.
+                      </p>
+                    </div>
+                    <ul className="list-disc pl-5 space-y-1 text-[#334155]">
+                      {omissionFlags.map((flag, flagIdx) => (
+                        <li key={flagIdx}>{flag}</li>
                       ))}
                     </ul>
                   </div>

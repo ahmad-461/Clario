@@ -26,10 +26,89 @@ export default function Home() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Speech Recognition State
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState<boolean | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [recognitionInstance, setRecognitionInstance] = useState<any>(null);
+
+  // Detect Speech Recognition Support
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // @ts-expect-error - SpeechRecognition is not standard in standard DOM lib yet
+      const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+      setSpeechSupported(!!SpeechRecognitionClass);
+    }
+  }, []);
+
+  // Initialize Speech Recognition
+  const toggleListening = () => {
+    if (!speechSupported) return;
+
+    if (isListening) {
+      if (recognitionInstance) {
+        recognitionInstance.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      // @ts-expect-error - SpeechRecognition is not standard in standard DOM lib yet
+      const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognitionClass();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onresult = (event: any) => {
+        const resultIndex = event.resultIndex;
+        const transcript = event.results[resultIndex][0].transcript;
+        if (transcript) {
+          setInputText((prev) => {
+            const separator = prev.trim() === "" ? "" : " ";
+            return prev + separator + transcript;
+          });
+        }
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+      setRecognitionInstance(recognition);
+    } catch (err) {
+      console.error("Speech recognition initialization failed:", err);
+      setIsListening(false);
+    }
+  };
+
+  // Clean up Speech Recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionInstance) {
+        recognitionInstance.stop();
+      }
+    };
+  }, [recognitionInstance]);
+
   const [explanation, setExplanation] = useState("");
   const [riskLevel, setRiskLevel] = useState("");
   const [riskReason, setRiskReason] = useState("");
   const [manipulationFlags, setManipulationFlags] = useState<string[]>([]);
+  const [omissionFlags, setOmissionFlags] = useState<string[]>([]);
   const [confidenceLevel, setConfidenceLevel] = useState("");
   const [confidenceNote, setConfidenceNote] = useState("");
   const [showConfidenceExplanation, setShowConfidenceExplanation] = useState(false);
@@ -38,6 +117,61 @@ export default function Home() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Text-to-Speech State
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Stop/Pause playback on cleanup or reset
+  const stopSpeaking = () => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+  };
+
+  const handleReadAloud = () => {
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      alert("Text-to-speech is not supported in this browser.");
+      return;
+    }
+
+    if (isSpeaking) {
+      stopSpeaking();
+      return;
+    }
+
+    // Prepare text to read aloud
+    // We clean up markdown characters to make speech synthesis sound natural
+    const cleanText = explanation
+      .replace(/[*#_`~>]/g, "") // Remove common markdown formatting characters
+      .replace(/-\s+/g, "");    // Remove list bullet symbols
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = "en-US";
+
+    // Set a calm, clear rate and pitch
+    utterance.rate = 0.95; // Slightly slower for readability/elderly suitability
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+
+    utterance.onerror = (e) => {
+      console.error("SpeechSynthesisUtterance error:", e);
+      setIsSpeaking(false);
+    };
+
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Stop speech if we reset the app or unmount
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
 
   // Constants
   const CHARACTER_LIMIT = 5000;
@@ -62,6 +196,7 @@ export default function Home() {
         setRiskLevel(item.risk_level || "low");
         setRiskReason(item.risk_reason || "");
         setManipulationFlags(item.manipulation_flags || []);
+        setOmissionFlags(item.omissionFlags || item.omission_flags || []);
         setConfidenceLevel(item.confidence_level || "high");
         setConfidenceNote(item.confidence_note || "");
         setSelectedTone(item.tone_mode || "simple");
@@ -266,6 +401,7 @@ export default function Home() {
     setRiskLevel("");
     setRiskReason("");
     setManipulationFlags([]);
+    setOmissionFlags([]);
     setConfidenceLevel("");
     setConfidenceNote("");
     setShowConfidenceExplanation(false);
@@ -300,6 +436,7 @@ export default function Home() {
       setRiskLevel(data.riskLevel || "low");
       setRiskReason(data.riskReason || "");
       setManipulationFlags(data.manipulationFlags || []);
+      setOmissionFlags(data.omissionFlags || []);
       setConfidenceLevel(data.confidenceLevel || "high");
       setConfidenceNote(data.confidenceNote || "");
 
@@ -380,6 +517,15 @@ export default function Home() {
         textToCopy += `\n`;
       }
 
+      // 3.5 Add Omission Flags
+      if (omissionFlags && omissionFlags.length > 0) {
+        textToCopy += `What's Missing:\n`;
+        omissionFlags.forEach((flag) => {
+          textToCopy += `- ${flag}\n`;
+        });
+        textToCopy += `\n`;
+      }
+
       // 4. Add Explanation
       textToCopy += `Explanation:\n${explanation}`;
 
@@ -393,6 +539,7 @@ export default function Home() {
 
   // Reset App State (Try Another)
   const handleReset = () => {
+    stopSpeaking();
     setInputText("");
     setSelectedFile(null);
     setPdfPageCount(null);
@@ -404,6 +551,7 @@ export default function Home() {
     setRiskLevel("");
     setRiskReason("");
     setManipulationFlags([]);
+    setOmissionFlags([]);
     setConfidenceLevel("");
     setConfidenceNote("");
     setShowConfidenceExplanation(false);
@@ -631,6 +779,51 @@ export default function Home() {
             </div>
           )}
 
+          {/* Omission Flags (What's Missing) (If present) */}
+          {omissionFlags && omissionFlags.length > 0 && (
+            <div style={{
+              backgroundColor: "#F8FAFC",
+              border: "1.5px dashed #94A3B8",
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "30px",
+            }}>
+              <span style={{
+                fontSize: "13px",
+                fontWeight: "900",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#334155",
+                display: "block",
+                marginBottom: "4px"
+              }}>
+                WHAT&apos;S MISSING
+              </span>
+              <span style={{
+                fontSize: "12px",
+                fontWeight: "600",
+                color: "#475569",
+                display: "block",
+                marginBottom: "12px"
+              }}>
+                Sometimes what&apos;s left out matters as much as what&apos;s said.
+              </span>
+              <ul style={{
+                fontSize: "15px",
+                fontWeight: "700",
+                lineHeight: "1.5",
+                margin: "0",
+                paddingLeft: "20px",
+                color: "#334155",
+                listStyleType: "disc",
+              }}>
+                {omissionFlags.map((flag, idx) => (
+                  <li key={idx} style={{ marginBottom: "6px" }}>{flag}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Simplified Explanation Content */}
           <div style={{ marginBottom: "40px" }}>
             <span style={{
@@ -832,9 +1025,55 @@ export default function Home() {
 
                       {/* Textarea Bottom Control bar */}
                       <div className="flex justify-between items-center px-6 py-4 border-t border-[#E2E8F0] bg-[#F4F6F9] text-sm text-[#334155]">
-                        <span className="font-medium text-xs tracking-wider text-[#475569]">
-                          {inputText.length.toLocaleString()} / {CHARACTER_LIMIT.toLocaleString()} characters
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium text-xs tracking-wider text-[#475569]">
+                            {inputText.length.toLocaleString()} / {CHARACTER_LIMIT.toLocaleString()} characters
+                          </span>
+
+                          {/* Speech-to-Text Button integrated right here */}
+                          <div className="relative group flex items-center">
+                            <button
+                              type="button"
+                              disabled={isLoading || speechSupported === false}
+                              onClick={toggleListening}
+                              className={`p-1.5 rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#0D9488] focus-visible:outline-none flex items-center justify-center ${
+                                isListening
+                                  ? "bg-red-500 text-white animate-pulse shadow-md"
+                                  : speechSupported === false
+                                  ? "text-slate-300 cursor-not-allowed opacity-50"
+                                  : "text-[#475569] hover:bg-[#E2E8F0] hover:text-[#0F172A]"
+                              }`}
+                              aria-label={
+                                speechSupported === false
+                                  ? "Voice input isn't supported in this browser"
+                                  : isListening
+                                  ? "Stop listening"
+                                  : "Speak confusing text (Voice input)"
+                              }
+                            >
+                              {isListening ? (
+                                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M6 19h12v2H6z M12 2C9.24 2 7 4.24 7 7v5c0 2.76 2.24 5 5 5s5-2.24 5-5V7c0-2.76-2.24-5-5-5zm3 10c0 1.66-1.34 3-3 3s-3-1.34-3-3V7c0-1.66 1.34-3 3-3s3 1.34 3 3v5z" />
+                                </svg>
+                              ) : (
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg>
+                              )}
+                            </button>
+
+                            {/* Precise browser compatibility feedback or listening helper tooltip */}
+                            {speechSupported === false ? (
+                              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-slate-800 text-white text-[11px] font-bold rounded shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 text-center z-50">
+                                Voice input isn&apos;t supported in this browser
+                              </span>
+                            ) : (
+                              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-36 p-2 bg-slate-800 text-white text-[11px] font-bold rounded shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 text-center z-50">
+                                {isListening ? "Listening... tap to stop" : "Speak to type"}
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
                         {inputText.length > 0 && !isLoading && (
                           <button
@@ -1169,6 +1408,35 @@ export default function Home() {
                         )}
                       </button>
 
+                      {/* Standard "Read Aloud" button (rendered only when tone is NOT elderly-friendly) */}
+                      {selectedTone !== "elderly-friendly" && (
+                        <button
+                          type="button"
+                          onClick={handleReadAloud}
+                          className={`px-4 py-2 rounded-lg text-sm font-bold transition duration-150 flex items-center gap-2 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                            isSpeaking
+                              ? "bg-red-500 text-white shadow-md animate-pulse"
+                              : "bg-[#F4F6F9] text-[#334155] hover:bg-[#E2E8F0] hover:text-[#0F172A]"
+                          }`}
+                        >
+                          {isSpeaking ? (
+                            <>
+                              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                              </svg>
+                              Stop playback
+                            </>
+                          ) : (
+                            <>
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                              </svg>
+                              Read Aloud
+                            </>
+                          )}
+                        </button>
+                      )}
+
                       {/* Actions: Copy */}
                       <button
                         type="button"
@@ -1197,6 +1465,38 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
+
+                  {/* PROMINENT ELDERLY-FRIENDLY VOICE BUTTON */}
+                  {selectedTone === "elderly-friendly" && (
+                    <div className="p-1 bg-[#F0FDFA] rounded-2xl border border-[#0D9488]/20 flex justify-center animate-fade-in">
+                      <button
+                        type="button"
+                        onClick={handleReadAloud}
+                        className={`w-full py-5 px-8 rounded-xl font-bold text-lg md:text-xl shadow-lg transition-all duration-300 flex items-center justify-center gap-3 focus-visible:ring-4 focus-visible:ring-[#0D9488]/40 focus-visible:outline-none active:scale-[0.98] ${
+                          isSpeaking
+                            ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                            : "bg-[#0D9488] text-white hover:bg-[#0D766E] hover:shadow-xl hover:-translate-y-0.5"
+                        }`}
+                      >
+                        {isSpeaking ? (
+                          <>
+                            <svg className="h-7 w-7 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Stop Reading Aloud (Stop Speech)
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                            Hear Explanation Read Aloud
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Risk Badge & Callout Section - Top of the card, above explanation text */}
                   <div className="flex flex-col gap-4">
@@ -1271,6 +1571,14 @@ export default function Home() {
                           Manipulation Tactics Observed
                         </span>
                       )}
+
+                      {/* Omissions Badge */}
+                      {omissionFlags && omissionFlags.length > 0 && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#F8FAFC] text-[#334155] border border-[#94A3B8]/30 uppercase tracking-wide">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#64748B]" />
+                          Notable Omissions Found
+                        </span>
+                      )}
                     </div>
 
                     {/* Confidence explanation Note (for high/medium, toggled by user) */}
@@ -1308,6 +1616,25 @@ export default function Home() {
                         </p>
                         <ul className="list-disc pl-5 space-y-1">
                           {manipulationFlags.map((flag, flagIdx) => (
+                            <li key={flagIdx}>{flag}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Omissions Callout Box (What's Missing) */}
+                    {omissionFlags && omissionFlags.length > 0 && (
+                      <div className="p-5 bg-[#F8FAFC] border border-dashed border-[#94A3B8] text-[#334155] rounded-xl text-xs md:text-sm font-semibold leading-relaxed space-y-3">
+                        <div className="space-y-0.5">
+                          <p className="font-extrabold tracking-wide uppercase text-[11px] text-[#334155]">
+                            What&apos;s Missing
+                          </p>
+                          <p className="text-[#475569] text-xs">
+                            Sometimes what&apos;s left out matters as much as what&apos;s said.
+                          </p>
+                        </div>
+                        <ul className="list-disc pl-5 space-y-1 text-[#334155]">
+                          {omissionFlags.map((flag, flagIdx) => (
                             <li key={flagIdx}>{flag}</li>
                           ))}
                         </ul>

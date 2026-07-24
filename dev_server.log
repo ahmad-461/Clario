@@ -9,30 +9,9 @@
      · serverActions
 
  ✓ Starting...
-Attention: Next.js now collects completely anonymous telemetry regarding usage.
-This information is used to shape Next.js' roadmap and prioritize features.
-You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
-https://nextjs.org/telemetry
-
- ✓ Ready in 1509ms
- ○ Compiling /untangle-log ...
- ✓ Compiled /untangle-log in 8.5s
- GET /untangle-log 200 in 9702ms
- ○ Compiling /api/untangle-log ...
- ✓ Compiled /api/untangle-log in 1854ms
-Supabase is not configured. Returning fallback mock data.
- GET /api/untangle-log 200 in 2327ms
- ○ Compiling /waiting-room ...
- ✓ Compiled /waiting-room in 5.4s
- GET /waiting-room 200 in 6066ms
- ✓ Compiled /api/explain in 357ms
-GEMINI_API_KEY is set: false
-GEMINI_API_KEY is not defined in the environment variables.
- POST /api/explain 500 in 1186ms
- GET /untangle-log 200 in 201ms
-Supabase is not configured. Returning fallback mock data.
- GET /api/untangle-log 200 in 319ms
- GET /waiting-room 200 in 333ms
-GEMINI_API_KEY is set: false
-GEMINI_API_KEY is not defined in the environment variables.
- POST /api/explain 500 in 303ms
+ ✓ Ready in 1726ms
+ ○ Compiling / ...
+ ✓ Compiled / in 9.2s
+ HEAD / 200 in 10455ms
+ GET / 200 in 466ms
+ GET / 200 in 239ms
