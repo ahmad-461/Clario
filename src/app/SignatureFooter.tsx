@@ -128,17 +128,36 @@ export function SignatureFooter() {
           <p className="leading-relaxed max-w-md lg:max-w-[45%] mx-auto lg:mx-0 text-center lg:text-left">
             Privacy-first by design. Clario processes documents in real-time. We never store raw text or file uploads for guest users, and only save them for signed-in users who choose to keep a personal history.
           </p>
-          <p className="my-1 lg:my-0 lg:text-center">
+          <div className="my-1 lg:my-0 flex flex-wrap justify-center gap-x-4 gap-y-1">
             <Link
               href="/untangle-log"
               className="hover:text-[#0D9488] transition duration-150 underline decoration-dotted underline-offset-4 font-bold"
             >
               The Untangle Log
             </Link>
-          </p>
-          <p className="whitespace-nowrap text-[#334155]/60 lg:text-[#334155] max-w-md lg:max-w-[45%] mx-auto lg:mx-0 text-center lg:text-right">
-            &copy; {new Date().getFullYear()} Clario. All rights reserved.
-          </p>
+            <span className="text-[#334155]/30 hidden sm:inline">|</span>
+            <Link
+              href="/methodology"
+              className="hover:text-[#0D9488] transition duration-150 underline decoration-dotted underline-offset-4 font-bold"
+            >
+              Methodology
+            </Link>
+            <span className="text-[#334155]/30 hidden sm:inline">|</span>
+            <Link
+              href="/about"
+              className="hover:text-[#0D9488] transition duration-150 underline decoration-dotted underline-offset-4 font-bold"
+            >
+              About Clario
+            </Link>
+          </div>
+          <div className="flex flex-col items-center lg:items-end gap-1 text-center lg:text-right max-w-md lg:max-w-[45%] mx-auto lg:mx-0">
+            <p className="whitespace-nowrap text-[#334155]/60 lg:text-[#334155]">
+              &copy; {new Date().getFullYear()} Clario. All rights reserved.
+            </p>
+            <p className="text-[10px] text-[#334155]/50 font-bold tracking-widest uppercase">
+              Actively maintained — July 2026
+            </p>
+          </div>
         </div>
 
       </div>

@@ -9,7 +9,14 @@
      · serverActions
 
  ✓ Starting...
- ✓ Ready in 1473ms
+ ✓ Ready in 1514ms
  ○ Compiling / ...
- ✓ Compiled / in 11.7s
- GET / 200 in 13383ms
+ ✓ Compiled / in 11.9s
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 13475ms
+ ○ Compiling /methodology ...
+ ✓ Compiled /methodology in 741ms
+ GET /methodology 200 in 1011ms
+ ○ Compiling /about ...
+ ✓ Compiled /about in 616ms
+ GET /about 200 in 782ms

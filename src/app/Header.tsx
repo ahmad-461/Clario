@@ -9,7 +9,7 @@ import { User } from "@supabase/supabase-js";
 
 interface HeaderProps {
   onSessionChange?: (user: User | null) => void;
-  currentPage?: "home" | "history" | "reset-password";
+  currentPage?: "home" | "history" | "reset-password" | "about" | "methodology";
 }
 
 export function Header({ onSessionChange, currentPage = "home" }: HeaderProps) {

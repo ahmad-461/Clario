@@ -151,6 +151,9 @@ export default function HistoryPage() {
           <p className="text-[#334155] text-sm md:text-base font-semibold">
             Review, copy, print, or delete your previously simplified documents and texts.
           </p>
+          <p className="text-[11px] text-slate-500 italic mt-1 leading-relaxed">
+            *This history displays AI-generated analyses, not professional or legal guarantees. Please verify important details before making legal, financial, or personal decisions.
+          </p>
         </div>
 
         {/* Loading State */}
