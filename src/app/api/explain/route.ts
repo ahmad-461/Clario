@@ -25,26 +25,40 @@ const SYSTEM_INSTRUCTIONS: Record<string, string> = {
 const RESPONSE_SCHEMA: Schema = {
   type: SchemaType.OBJECT,
   properties: {
-    explanation: {
+    understandIt: {
       type: SchemaType.STRING,
       description: "The plain-language, simplified explanation of the text, matching the requested tone/audience mode.",
+    },
+    whatMatters: {
+      type: SchemaType.ARRAY,
+      items: { type: SchemaType.STRING },
+      description: "An array of short, concrete key facts, obligations, deadlines, payments, fees, or required actions. Present as short, actionable bullet points.",
+    },
+    whatTheyAreNotTellingYou: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          category: {
+            type: SchemaType.STRING,
+            format: "enum",
+            enum: ["Stated", "Implied", "Worth verifying"],
+            description: "Categorize as 'Stated' (explicitly stated in source but potentially hidden or notable), 'Implied' (not stated outright but implied), or 'Worth verifying' (requires external verification).",
+          },
+          text: {
+            type: SchemaType.STRING,
+            description: "The description of the risk, manipulation, omission, or unusual pattern. Keep it brief and clear.",
+          }
+        },
+        required: ["category", "text"]
+      },
+      description: "A consolidated list of hidden risks, unusual conditions, pressure tactics, manipulative language, easily overlooked details, potential consequences, or omitted details.",
     },
     riskLevel: {
       type: SchemaType.STRING,
       format: "enum",
       enum: ["low", "medium", "high"],
       description: "The analyzed risk level: 'high' for clear signs of scam/fraud/phishing/impersonation/too-good-to-be-true/OTP requests; 'medium' for suspicious, urgent or highly misleading elements; 'low' if no obvious risks are found.",
-    },
-    riskReason: {
-      type: SchemaType.STRING,
-      description: "A short 1-2 sentence explanation of why it was assigned that risk level. Must be empty string if riskLevel is 'low' and no notable issues were found.",
-    },
-    manipulationFlags: {
-      type: SchemaType.ARRAY,
-      items: {
-        type: SchemaType.STRING,
-      },
-      description: "An array of short strings pointing out personal emotional/pressure manipulation tactics if detected (e.g., guilt-tripping language, fear/urgency pressure, emotional manipulation, controlling language from personal or professional senders like family/bosses/partners/friends). Keep flags under 10 words, concise, non-judgmental, and descriptive of observed patterns. Return empty array if none are detected.",
     },
     confidenceLevel: {
       type: SchemaType.STRING,
@@ -61,17 +75,10 @@ const RESPONSE_SCHEMA: Schema = {
       items: {
         type: SchemaType.STRING,
       },
-      description: "2-3 short, concrete conversational talking points or questions the two readers (e.g. an adult child helping an elderly parent) could discuss together (e.g. 'Ask them: does this deadline feel rushed to you too?'). Must be empty array if companionMode is inactive.",
-    },
-    omissionFlags: {
-      type: SchemaType.ARRAY,
-      items: {
-        type: SchemaType.STRING,
-      },
-      description: "An array of short strings describing notably absent information relevant to the document type (e.g. 'No cancellation policy mentioned', 'Salary/compensation details are missing', 'No contact information for disputes'). Keep flags short and descriptive. Only flag omissions that would be reasonably expected for that TYPE of document (e.g. a lease missing a security deposit clause, a job offer missing start date/salary, a subscription notice missing a cancellation method). Return empty array if nothing notable is missing, or if the input is too short, generic, or casual for this analysis to be meaningful.",
+      description: "2-3 short, concrete conversational talking points or questions the two readers (e.g. an adult child helping an elderly parent) could discuss together. Must be empty array if companionMode is inactive.",
     },
   },
-  required: ["explanation", "riskLevel", "riskReason", "manipulationFlags", "confidenceLevel", "confidenceNote", "talkingPoints", "omissionFlags"],
+  required: ["understandIt", "whatMatters", "whatTheyAreNotTellingYou", "riskLevel", "confidenceLevel", "confidenceNote", "talkingPoints"],
 };
 
 export async function POST(request: Request) {
@@ -103,7 +110,6 @@ export async function POST(request: Request) {
         formData = await request.formData();
       } catch (err: unknown) {
         console.error("Failed to parse form data:", err);
-        // If form parsing failed due to body size limit or network abort
         const errMsg = err instanceof Error ? err.message : "";
         if (errMsg.toLowerCase().includes("large") || errMsg.toLowerCase().includes("limit")) {
           return NextResponse.json(
@@ -121,7 +127,6 @@ export async function POST(request: Request) {
       companionMode = formData.get("companionMode") === "true";
       file = formData.get("file") as File | null;
     } else {
-      // JSON body
       let body;
       try {
         body = await request.json();
@@ -174,7 +179,6 @@ export async function POST(request: Request) {
 
     // 5. If a file is uploaded, process it
     if (file && file.size > 0) {
-      // Enforce 5MB limit
       if (file.size > 5 * 1024 * 1024) {
         return NextResponse.json(
           { error: "The file is too large. Max file size is 5MB." },
@@ -201,7 +205,6 @@ export async function POST(request: Request) {
 
       if (isPdf) {
         inputType = "pdf";
-        // Extract text server-side
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
@@ -227,26 +230,28 @@ export async function POST(request: Request) {
           );
         }
 
-        // Limit the character length of PDF to avoid excessive tokens
         const finalPdfText = extractedText.length > 150000
           ? extractedText.substring(0, 150000) + "\n\n[Truncated due to length]"
           : extractedText;
 
-        const prompt = `Please carefully analyze the following text extracted from a PDF. You have six main tasks:
-1. Simplify and explain the text clearly according to your system instructions for the requested tone.
-2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
-3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
-4. Assess your own confidence level in explaining this text accurately, and provide a short 1-sentence note explanation of why confidence is at that level:
-   - HIGH: the text is a common, well-understood type of document/message (standard contract language, common scam patterns, typical bills/notices, everyday messages)
-   - MEDIUM: the text is understandable but has some ambiguous, unusual, or context-dependent parts
-   - LOW: the text is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
-   - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
-5. Provide talkingPoints according to these rules:
-   - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
-   - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].
-6. Analyze the text for notably absent information that should reasonably be present for this TYPE of document, and return these as omissionFlags:
-   - Only flag omissions that are expected for the specific document type (e.g., a lease missing security deposit terms, a job offer missing salary/start date, a subscription missing cancellation terms).
-   - Return an empty array [] if no notable omissions are found, or if the input is a casual personal message or short text where this analysis is not meaningful.
+        const prompt = `Please carefully analyze the following text extracted from a PDF. You have three primary analysis layers to populate:
+1. "Understand It" (understandIt): A clear, plain-language, simplified explanation of the text matching the requested tone.
+2. "What Matters" (whatMatters): A scannable bullet-pointed list of key concrete details (deadlines, payments/fees, obligations, consequences, conditions, actions required, or terms). It must be short and action-oriented.
+3. "What They're Not Telling You" (whatTheyAreNotTellingYou): A list of hidden risks, manipulative pressure tactics (e.g. emotional manipulation, artificial urgency), unusual clauses, potential consequences, or notably absent details (omissions expected for this type of document). You must categorize each item into exactly one of three categories:
+   - "Stated" (explicitly stated in the source text but potentially hidden or key to note)
+   - "Implied" (implied but not stated outright)
+   - "Worth verifying" (requires external verification or further check)
+
+Note on Risk Language and Softening:
+- Use cautious, honest language rather than alarmist or definitive claims.
+- Use words like: potential risk, possible concern, unusual pattern, worth verifying, proceed with caution.
+- Avoid absolute claims like "this is a scam" unless evidence is 100% explicit and unambiguous (e.g. asking for bank credentials directly).
+
+Confidence Level Assessment:
+- Assess confidence level (high, medium, low) and provide a confidenceNote. Suggest consulting a professional (lawyer, doctor, accountant, etc.) if confidence is low.
+
+Talking Points:
+- If companionMode is active (companionMode is: ${companionMode}), generate 2-3 collaborative questions/talking points. If inactive, return an empty array [].
 
 Text to analyze:
 """
@@ -256,7 +261,6 @@ ${finalPdfText}
         result = await model.generateContent(prompt);
 
       } else {
-        // Supported Image
         inputType = "image";
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
@@ -264,31 +268,33 @@ ${finalPdfText}
         const imagePart = {
           inlineData: {
             data: buffer.toString("base64"),
-            mimeType: mimeType || "image/jpeg", // fallback
+            mimeType: mimeType || "image/jpeg",
           },
         };
 
-        const prompt = `Please carefully analyze the attached image. You have six main tasks:
-1. Simplify and explain the text or visual content clearly according to your system instructions for the requested tone.
-2. Analyze the content for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
-3. Analyze the content for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
-4. Assess your own confidence level in explaining this text/image accurately, and provide a short 1-sentence note explanation of why confidence is at that level:
-   - HIGH: the text/image is a common, well-understood type of document/message (standard contract language, common scam patterns, typical bills/notices, everyday messages)
-   - MEDIUM: the text/image is understandable but has some ambiguous, unusual, or context-dependent parts
-   - LOW: the text/image is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
-   - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
-5. Provide talkingPoints according to these rules:
-   - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
-   - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].
-6. Analyze the image content for notably absent information that should reasonably be present for this TYPE of document, and return these as omissionFlags:
-   - Only flag omissions that are expected for the specific document type (e.g., a lease missing security deposit terms, a job offer missing salary/start date, a subscription missing cancellation terms).
-   - Return an empty array [] if no notable omissions are found, or if the input is a casual personal message or short text where this analysis is not meaningful.`;
+        const prompt = `Please carefully analyze the attached image. You have three primary analysis layers to populate:
+1. "Understand It" (understandIt): A clear, plain-language, simplified explanation of the text matching the requested tone.
+2. "What Matters" (whatMatters): A scannable bullet-pointed list of key concrete details (deadlines, payments/fees, obligations, consequences, conditions, actions required, or terms). It must be short and action-oriented.
+3. "What They're Not Telling You" (whatTheyAreNotTellingYou): A list of hidden risks, manipulative pressure tactics (e.g. emotional manipulation, artificial urgency), unusual clauses, potential consequences, or notably absent details (omissions expected for this type of document). You must categorize each item into exactly one of three categories:
+   - "Stated" (explicitly stated in the source text but potentially hidden or key to note)
+   - "Implied" (implied but not stated outright)
+   - "Worth verifying" (requires external verification or further check)
+
+Note on Risk Language and Softening:
+- Use cautious, honest language rather than alarmist or definitive claims.
+- Use words like: potential risk, possible concern, unusual pattern, worth verifying, proceed with caution.
+- Avoid absolute claims like "this is a scam" unless evidence is 100% explicit and unambiguous (e.g. asking for bank credentials directly).
+
+Confidence Level Assessment:
+- Assess confidence level (high, medium, low) and provide a confidenceNote. Suggest consulting a professional (lawyer, doctor, accountant, etc.) if confidence is low.
+
+Talking Points:
+- If companionMode is active (companionMode is: ${companionMode}), generate 2-3 collaborative questions/talking points. If inactive, return an empty array [].`;
 
         result = await model.generateContent([prompt, imagePart]);
       }
 
     } else {
-      // Normal Text Input
       inputType = "text";
       if (!text || typeof text !== "string" || text.trim() === "") {
         return NextResponse.json(
@@ -304,21 +310,24 @@ ${finalPdfText}
         );
       }
 
-      const prompt = `Please carefully analyze the following text. You have six main tasks:
-1. Simplify and explain the text clearly according to your system instructions for the requested tone.
-2. Analyze the text for signs of scams, fraud, phishing, misleading intent, urgency pressure, requests for money, OTPs, personal info, suspicious links, or impersonation.
-3. Analyze the text for personal emotional manipulation, pressure tactics, guilt-tripping, emotional blackmail, or controlling language from personal or professional senders (family, partners, bosses, friends, etc.).
-4. Assess your own confidence level in explaining this text accurately, and provide a short 1-sentence note explanation of why confidence is at that level:
-   - HIGH: the text is a common, well-understood type of document/message (standard contract language, common scam patterns, typical bills/notices, everyday messages)
-   - MEDIUM: the text is understandable but has some ambiguous, unusual, or context-dependent parts
-   - LOW: the text is highly ambiguous, unusual, technical/legal/medical in a way that carries real risk if misunderstood, contradictory, or too short/fragmented to confidently interpret
-   - For LOW confidence specifically, the confidenceNote MUST gently suggest consulting a relevant professional (lawyer, doctor, accountant, etc. — pick the most relevant one based on content) rather than relying solely on the explanation.
-5. Provide talkingPoints according to these rules:
-   - If companionMode is active (companionMode is currently: ${companionMode}), generate 2-3 short, concrete questions/talking points the two people could discuss together (e.g., "Ask them: does this deadline feel rushed to you too?").
-   - If companionMode is inactive (companionMode is currently: ${companionMode}), return an empty array [].
-6. Analyze the text for notably absent information that should reasonably be present for this TYPE of document, and return these as omissionFlags:
-   - Only flag omissions that are expected for the specific document type (e.g., a lease missing security deposit terms, a job offer missing salary/start date, a subscription missing cancellation terms).
-   - Return an empty array [] if no notable omissions are found, or if the input is a casual personal message or short text where this analysis is not meaningful.
+      const prompt = `Please carefully analyze the following text. You have three primary analysis layers to populate:
+1. "Understand It" (understandIt): A clear, plain-language, simplified explanation of the text matching the requested tone.
+2. "What Matters" (whatMatters): A scannable bullet-pointed list of key concrete details (deadlines, payments/fees, obligations, consequences, conditions, actions required, or terms). It must be short and action-oriented.
+3. "What They're Not Telling You" (whatTheyAreNotTellingYou): A list of hidden risks, manipulative pressure tactics (e.g. emotional manipulation, artificial urgency), unusual clauses, potential consequences, or notably absent details (omissions expected for this type of document). You must categorize each item into exactly one of three categories:
+   - "Stated" (explicitly stated in the source text but potentially hidden or key to note)
+   - "Implied" (implied but not stated outright)
+   - "Worth verifying" (requires external verification or further check)
+
+Note on Risk Language and Softening:
+- Use cautious, honest language rather than alarmist or definitive claims.
+- Use words like: potential risk, possible concern, unusual pattern, worth verifying, proceed with caution.
+- Avoid absolute claims like "this is a scam" unless evidence is 100% explicit and unambiguous (e.g. asking for bank credentials directly).
+
+Confidence Level Assessment:
+- Assess confidence level (high, medium, low) and provide a confidenceNote. Suggest consulting a professional (lawyer, doctor, accountant, etc.) if confidence is low.
+
+Talking Points:
+- If companionMode is active (companionMode is: ${companionMode}), generate 2-3 collaborative questions/talking points. If inactive, return an empty array [].
 
 Text to analyze:
 """
@@ -328,7 +337,6 @@ ${text}
       result = await model.generateContent(prompt);
     }
 
-    // 6. Generate content from Gemini API
     const response = await result.response;
     const responseText = response.text();
 
@@ -336,7 +344,6 @@ ${text}
       throw new Error("Empty response returned from Gemini API");
     }
 
-    // Try parsing the response as JSON
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(responseText);
@@ -348,12 +355,31 @@ ${text}
       );
     }
 
-    const { explanation, riskLevel, riskReason, manipulationFlags, confidenceLevel, confidenceNote, talkingPoints, omissionFlags } = parsedResponse;
+    const { understandIt, whatMatters, whatTheyAreNotTellingYou, riskLevel, confidenceLevel, confidenceNote, talkingPoints } = parsedResponse;
 
     // Validate properties
-    if (!explanation || !riskLevel || typeof riskReason !== "string" || !Array.isArray(manipulationFlags) || !confidenceLevel || typeof confidenceNote !== "string" || !Array.isArray(talkingPoints) || !Array.isArray(omissionFlags)) {
-      throw new Error("Response JSON does not contain all required fields");
+    if (!understandIt || !Array.isArray(whatMatters) || !Array.isArray(whatTheyAreNotTellingYou) || !riskLevel || !confidenceLevel || typeof confidenceNote !== "string" || !Array.isArray(talkingPoints)) {
+      throw new Error("Response JSON does not contain all required fields of the new schema");
     }
+
+    // Prepare full multi-layer text as unified Markdown for backwards compatibility and database storage (Option A)
+    let fullMarkdownText = `### Understand It\n\n${understandIt}\n\n### What Matters\n\n`;
+    whatMatters.forEach((item: string) => {
+      fullMarkdownText += `- ${item}\n`;
+    });
+    fullMarkdownText += `\n### What They're Not Telling You\n\n`;
+
+    const categories = ["Stated", "Implied", "Worth verifying"];
+    categories.forEach((cat) => {
+      const items = whatTheyAreNotTellingYou.filter((item: { category: string; text: string }) => item.category === cat);
+      if (items.length > 0) {
+        fullMarkdownText += `#### ${cat}\n`;
+        items.forEach((item: { text: string }) => {
+          fullMarkdownText += `- ${item.text}\n`;
+        });
+        fullMarkdownText += `\n`;
+      }
+    });
 
     // 7. Non-blocking Log to Supabase anonymous analytics
     try {
@@ -363,7 +389,6 @@ ${text}
         else if (normalizedTone === "teacher") toneMode = "teacher";
         else if (normalizedTone === "elderly-friendly" || normalizedTone === "elderly") toneMode = "elderly";
 
-        // Perform insert with service role bypass
         const { error: dbError } = await supabase.from("usage_logs").insert({
           input_type: inputType,
           tone_mode: toneMode,
@@ -381,23 +406,23 @@ ${text}
       console.error("Error occurred while logging to Supabase:", dbEx);
     }
 
-    // 8. Return success response (include pageCount if it's a PDF for frontend use)
+    // Return success response structured for both old client code and the new three-layer representation
     return NextResponse.json({
-      explanation,
+      // Keep explanation as fallback / backwards compatibility with full serialized markdown (especially for history review / sharing)
+      explanation: fullMarkdownText.trim(),
+      understandIt,
+      whatMatters,
+      whatTheyAreNotTellingYou,
       riskLevel,
-      riskReason,
-      manipulationFlags,
       confidenceLevel,
       confidenceNote,
       talkingPoints,
-      omissionFlags,
       ...(pdfPageCount !== null ? { pdfPageCount } : {}),
     });
 
   } catch (error: unknown) {
     console.error("Error in /api/explain:", error);
 
-    // Check if error is related to payload size, body-parser limits, or too large content
     const errMsg = error instanceof Error ? error.message : "";
     if (
       errMsg.toLowerCase().includes("large") ||

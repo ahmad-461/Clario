@@ -176,10 +176,10 @@ export default function UntangleLogPage() {
 
           <div className="lg:col-span-5 text-left lg:border-l lg:border-[#E2E8F0] lg:pl-6 space-y-2.5">
             <span className="text-xs font-bold text-[#475569] uppercase tracking-wider block">
-              Anonymized Metrics Only
+              Privacy-first by design
             </span>
             <p className="text-xs text-[#334155] font-semibold leading-relaxed">
-              To guarantee your safety, Clario never logs or saves original text or files. We record only anonymous, high-level parameters to track our direct impact in helping people understand before they decide.
+              Privacy-first by design. Clario processes text and files in real-time. For guest sessions, no raw text or file contents are ever stored or saved. We record only anonymous, high-level metadata to measure our direct impact in helping people understand before they decide.
             </p>
           </div>
         </div>
@@ -340,21 +340,21 @@ export default function UntangleLogPage() {
                       Deception Detection Breakdown
                     </span>
                     <h3 className="text-sm font-bold text-[#0F172A] border-b border-slate-100 pb-2 mb-3">
-                      Predatory Tactics &amp; Risks
+                      Possible Concerns &amp; Risks
                     </h3>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs p-1.5 rounded-lg bg-[#FCE8E6]/60 text-[#7F1D1D] font-bold">
-                      <span className="flex items-center gap-1">⚠️ High Risk (Scams)</span>
+                      <span className="flex items-center gap-1">⚠️ Worth a Closer Look</span>
                       <span>{activeStats.risk.high.count} ({activeStats.risk.high.pct}%)</span>
                     </div>
                     <div className="flex items-center justify-between text-xs p-1.5 rounded-lg bg-[#FEF7E0] text-[#78350F] font-bold">
-                      <span className="flex items-center gap-1">🚨 Medium Risk (Suspicious)</span>
+                      <span className="flex items-center gap-1">🚨 Possible Concern</span>
                       <span>{activeStats.risk.medium.count} ({activeStats.risk.medium.pct}%)</span>
                     </div>
                     <div className="flex items-center justify-between text-xs p-1.5 rounded-lg bg-[#E6F4EA] text-[#0F766E] font-bold">
-                      <span className="flex items-center gap-1">🛡️ Low Risk (Clear)</span>
+                      <span className="flex items-center gap-1">🛡️ No obvious concerns</span>
                       <span>{activeStats.risk.low.count} ({activeStats.risk.low.pct}%)</span>
                     </div>
                   </div>

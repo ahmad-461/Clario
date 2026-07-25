@@ -251,20 +251,20 @@ export default function HistoryPage() {
                           {item.tone_mode === "elderly-friendly" ? "Elderly-friendly" : item.tone_mode}
                         </span>
 
-                        {/* Risk level Badge */}
+                        {/* Softened Risk level Badges */}
                         {item.risk_level === "low" && (
                           <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#E6F4EA] text-[#137333] border border-[#137333]/15">
-                            No Obvious Risk
+                            No obvious concerns detected
                           </span>
                         )}
                         {item.risk_level === "medium" && (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FEF7E0] text-[#B06000] border border-[#B06000]/15">
-                            Medium Risk
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FEF7E0] text-[#78350F] border border-[#78350F]/15">
+                            Possible Concern
                           </span>
                         )}
                         {item.risk_level === "high" && (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FCE8E6] text-[#C5221F] border border-[#C5221F]/15 animate-pulse">
-                            High Risk
+                          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FCE8E6] text-[#7F1D1D] border border-[#7F1D1D]/15">
+                            Worth a Closer Look
                           </span>
                         )}
 

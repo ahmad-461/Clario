@@ -9,152 +9,17 @@
      · serverActions
 
  ✓ Starting...
- ✓ Ready in 1513ms
+ ✓ Ready in 1567ms
  ○ Compiling / ...
- ✓ Compiled / in 9.4s
- HEAD / 200 in 10477ms
- GET / 200 in 415ms
+ ✓ Compiled / in 9.2s
+ HEAD / 200 in 10363ms
+ GET / 200 in 488ms
  ○ Compiling /waiting-room ...
- ✓ Compiled /waiting-room in 1162ms
- GET /waiting-room 200 in 1363ms
- ○ Compiling /history ...
- ✓ Compiled /history in 540ms
- GET /history 200 in 733ms
+ ✓ Compiled /waiting-room in 1477ms
+ GET /waiting-room 200 in 1675ms
  ○ Compiling /untangle-log ...
- ✓ Compiled /untangle-log in 547ms
- GET /untangle-log 200 in 697ms
+ ✓ Compiled /untangle-log in 694ms
+ GET /untangle-log 200 in 889ms
  ○ Compiling /api/untangle-log ...
- ✓ Compiled /api/untangle-log in 1036ms
+ ✓ Compiled /api/untangle-log in 1303ms
 Supabase is not configured. Returning fallback mock data.
- GET /api/untangle-log 200 in 1544ms
- GET / 200 in 437ms
- GET / 200 in 259ms
- GET /waiting-room 200 in 215ms
- GET /history 200 in 191ms
- GET /untangle-log 200 in 169ms
-Supabase is not configured. Returning fallback mock data.
- GET /api/untangle-log 200 in 387ms
- GET / 200 in 205ms
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.npetwfp5w8g'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.npetwfp5w8g'
-}
- ○ Compiling /_error ...
- ✓ Compiled /_error in 4.8s
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.cq5ans1ry9t'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.cq5ans1ry9t'
-}
-[Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.npetwfp5w8g'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.npetwfp5w8g'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.fs2qqtg1m66'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.fs2qqtg1m66'
-}
-[Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.eyp9v9eyuap'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.eyp9v9eyuap'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.faor7tlw0yc'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.faor7tlw0yc'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.rgrbi8pm36e'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.rgrbi8pm36e'
-}
-[Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.faor7tlw0yc'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.faor7tlw0yc'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.ht5w193a5q'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.ht5w193a5q'
-}
-[Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.dy7y71fqaud'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.dy7y71fqaud'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.32iwec30kw5'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.32iwec30kw5'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.3ede4ll6azd'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.3ede4ll6azd'
-}
-[Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.32iwec30kw5'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.32iwec30kw5'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.eozowbctee'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.eozowbctee'
-}
-[Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.x6923093l6r'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.x6923093l6r'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.q74vdu58u6m'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.q74vdu58u6m'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.n6ir5jc7t0p'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.n6ir5jc7t0p'
-}
-[Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.q74vdu58u6m'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.q74vdu58u6m'
-}
- ⨯ [Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.f978yj0wq7p'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.f978yj0wq7p'
-}
-[Error: ENOENT: no such file or directory, open '/app/.next/static/development/_buildManifest.js.tmp.n2b1zzbu7ya'] {
-  errno: -2,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: '/app/.next/static/development/_buildManifest.js.tmp.n2b1zzbu7ya'
-}
-Killed

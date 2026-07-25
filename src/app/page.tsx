@@ -17,6 +17,11 @@ const TONES = [
   { id: "elderly-friendly", label: "Elderly-friendly" },
 ];
 
+interface WhatTheyAreNotTellingYouItem {
+  category: "Stated" | "Implied" | "Worth verifying";
+  text: string;
+}
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
 
@@ -138,11 +143,12 @@ export default function Home() {
     };
   }, [recognitionInstance]);
 
-  const [explanation, setExplanation] = useState("");
+  const [explanation, setExplanation] = useState(""); // This is now our unified serialized Markdown backup (Option A)
+  const [understandItText, setUnderstandItText] = useState("");
+  const [whatMattersItems, setWhatMattersItems] = useState<string[]>([]);
+  const [whatTheyAreNotTellingYouItems, setWhatTheyAreNotTellingYouItems] = useState<WhatTheyAreNotTellingYouItem[]>([]);
+
   const [riskLevel, setRiskLevel] = useState("");
-  const [riskReason, setRiskReason] = useState("");
-  const [manipulationFlags, setManipulationFlags] = useState<string[]>([]);
-  const [omissionFlags, setOmissionFlags] = useState<string[]>([]);
   const [confidenceLevel, setConfidenceLevel] = useState("");
   const [confidenceNote, setConfidenceNote] = useState("");
   const [showConfidenceExplanation, setShowConfidenceExplanation] = useState(false);
@@ -176,7 +182,7 @@ export default function Home() {
 
     // Prepare text to read aloud
     // We clean up markdown characters to make speech synthesis sound natural
-    const cleanText = explanation
+    const cleanText = understandItText
       .replace(/[*#_`~>]/g, "") // Remove common markdown formatting characters
       .replace(/-\s+/g, "");    // Remove list bullet symbols
 
@@ -216,6 +222,64 @@ export default function Home() {
     };
   }, [imagePreviewUrl]);
 
+  // Parse a serialized Markdown explanation string back into structured states (Option A)
+  const parseSerializedMarkdown = (markdown: string) => {
+    // Highly robust manual chunking of standard segments
+    const sections = markdown.split(/###\s+/);
+    let understandText = "";
+    const mattersList: string[] = [];
+    const untellingItems: WhatTheyAreNotTellingYouItem[] = [];
+
+    sections.forEach((sec) => {
+      const trimmed = sec.trim();
+      if (trimmed.startsWith("Understand It")) {
+        understandText = trimmed.replace(/^Understand It\s*/, "").trim();
+      } else if (trimmed.startsWith("What Matters")) {
+        const lines = trimmed.replace(/^What Matters\s*/, "").split("\n");
+        lines.forEach((line) => {
+          const m = line.trim().match(/^-\s+(.*)$/);
+          if (m) mattersList.push(m[1].trim());
+        });
+      } else if (trimmed.startsWith("What They're Not Telling You") || trimmed.startsWith("What They Are Not Telling You")) {
+        const body = trimmed.replace(/^(What They're Not Telling You|What They Are Not Telling You)\s*/, "");
+        const subSections = body.split(/####\s+/);
+        subSections.forEach((sub) => {
+          const subTrimmed = sub.trim();
+          let currentCategory: "Stated" | "Implied" | "Worth verifying" | null = null;
+          if (subTrimmed.startsWith("Stated")) {
+            currentCategory = "Stated";
+          } else if (subTrimmed.startsWith("Implied")) {
+            currentCategory = "Implied";
+          } else if (subTrimmed.startsWith("Worth verifying")) {
+            currentCategory = "Worth verifying";
+          }
+
+          if (currentCategory) {
+            const lines = subTrimmed.replace(/^(Stated|Implied|Worth verifying)\s*/, "").split("\n");
+            lines.forEach((line) => {
+              const m = line.trim().match(/^-\s+(.*)$/);
+              if (m) {
+                untellingItems.push({
+                  category: currentCategory as "Stated" | "Implied" | "Worth verifying",
+                  text: m[1].trim()
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Fallback if formatting was non-standard or missing (e.g. legacy database records)
+    if (!understandText && markdown) {
+      understandText = markdown;
+    }
+
+    setUnderstandItText(understandText);
+    setWhatMattersItems(mattersList);
+    setWhatTheyAreNotTellingYouItems(untellingItems);
+  };
+
   // Handle shared history load
   useEffect(() => {
     try {
@@ -223,11 +287,11 @@ export default function Home() {
       if (sharedItemStr) {
         const item = JSON.parse(sharedItemStr);
         // Populate output states
-        setExplanation(item.explanation_text);
+        const rawExplanation = item.explanation_text || "";
+        setExplanation(rawExplanation);
+        parseSerializedMarkdown(rawExplanation);
+
         setRiskLevel(item.risk_level || "low");
-        setRiskReason(item.risk_reason || "");
-        setManipulationFlags(item.manipulation_flags || []);
-        setOmissionFlags(item.omissionFlags || item.omission_flags || []);
         setConfidenceLevel(item.confidence_level || "high");
         setConfidenceNote(item.confidence_note || "");
         setSelectedTone(item.tone_mode || "simple");
@@ -275,7 +339,6 @@ export default function Home() {
           .single();
 
         if (prefErr) {
-          // No profile row yet, which is expected for brand new signups
           if (prefErr.code !== "PGRST116") {
             console.error("Failed to fetch preference:", prefErr.message);
           }
@@ -364,7 +427,6 @@ export default function Home() {
         reader.onload = () => {
           const result = reader.result;
           if (result instanceof ArrayBuffer) {
-            // Look at first 1MB of metadata for page structures to count pages
             const chunk = result.slice(0, 1000000);
             const text = new TextDecoder("utf-8").decode(new Uint8Array(chunk));
             const matches = text.match(/\/Type\s*\/Page\b/g);
@@ -426,7 +488,6 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Local/frontend validation check
     if (inputMode === "text" && !inputText.trim()) {
       setError("Please paste some text to explain.");
       return;
@@ -442,10 +503,11 @@ export default function Home() {
     setIsLoading(true);
     setError("");
     setExplanation("");
+    setUnderstandItText("");
+    setWhatMattersItems([]);
+    setWhatTheyAreNotTellingYouItems([]);
+
     setRiskLevel("");
-    setRiskReason("");
-    setManipulationFlags([]);
-    setOmissionFlags([]);
     setConfidenceLevel("");
     setConfidenceNote("");
     setShowConfidenceExplanation(false);
@@ -477,10 +539,11 @@ export default function Home() {
       }
 
       setExplanation(data.explanation);
+      setUnderstandItText(data.understandIt);
+      setWhatMattersItems(data.whatMatters || []);
+      setWhatTheyAreNotTellingYouItems(data.whatTheyAreNotTellingYou || []);
+
       setRiskLevel(data.riskLevel || "low");
-      setRiskReason(data.riskReason || "");
-      setManipulationFlags(data.manipulationFlags || []);
-      setOmissionFlags(data.omissionFlags || []);
       setConfidenceLevel(data.confidenceLevel || "high");
       setConfidenceNote(data.confidenceNote || "");
 
@@ -488,7 +551,7 @@ export default function Home() {
         setPdfPageCount(data.pdfPageCount);
       }
 
-      // Save to history in background if user is logged in (Feature 2)
+      // Save to history in background if user is logged in
       const client = supabaseClient;
       if (user && client) {
         const resolvedInputType = inputMode === "file" && selectedFile
@@ -505,8 +568,8 @@ export default function Home() {
                 tone_mode: selectedTone,
                 explanation_text: data.explanation,
                 risk_level: data.riskLevel || "low",
-                risk_reason: data.riskReason || null,
-                manipulation_flags: data.manipulationFlags || null,
+                risk_reason: null, // Unified into three-layer serialized text (Option A)
+                manipulation_flags: null,
                 confidence_level: data.confidenceLevel || "high",
               });
             if (histErr) {
@@ -546,32 +609,17 @@ export default function Home() {
         textToCopy += `\n`;
       }
 
-      // 2. Add Scam Risk
-      if (riskLevel === "medium" || riskLevel === "high") {
-        const formattedRisk = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1);
-        textToCopy += `Risk: ${formattedRisk}\nReason: ${riskReason}\n\n`;
+      // 2. Add Scam Risk Badge Info (Softened)
+      if (riskLevel === "high") {
+        textToCopy += `Status: Worth a Closer Look\n\n`;
+      } else if (riskLevel === "medium") {
+        textToCopy += `Status: Possible Concern\n\n`;
+      } else {
+        textToCopy += `Status: No obvious concerns detected\n\n`;
       }
 
-      // 3. Add Manipulation Flags
-      if (manipulationFlags && manipulationFlags.length > 0) {
-        textToCopy += `Manipulation Flags:\n`;
-        manipulationFlags.forEach((flag) => {
-          textToCopy += `- ${flag}\n`;
-        });
-        textToCopy += `\n`;
-      }
-
-      // 3.5 Add Omission Flags
-      if (omissionFlags && omissionFlags.length > 0) {
-        textToCopy += `What's Missing:\n`;
-        omissionFlags.forEach((flag) => {
-          textToCopy += `- ${flag}\n`;
-        });
-        textToCopy += `\n`;
-      }
-
-      // 4. Add Explanation
-      textToCopy += `Explanation:\n${explanation}`;
+      // 3. Add Explanation Markdown content (already contains Option A layout)
+      textToCopy += explanation;
 
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
@@ -593,10 +641,11 @@ export default function Home() {
       setImagePreviewUrl(null);
     }
     setExplanation("");
+    setUnderstandItText("");
+    setWhatMattersItems([]);
+    setWhatTheyAreNotTellingYouItems([]);
+
     setRiskLevel("");
-    setRiskReason("");
-    setManipulationFlags([]);
-    setOmissionFlags([]);
     setConfidenceLevel("");
     setConfidenceNote("");
     setShowConfidenceExplanation(false);
@@ -604,7 +653,7 @@ export default function Home() {
     setIsLoading(false);
   };
 
-  // Custom text renderer to format markdown (bullet points, bold, paragraphs, etc.) securely
+  // Custom text renderer to format markdown securely
   const renderExplanation = (text: string) => {
     const isElderly = selectedTone === "elderly-friendly";
 
@@ -654,6 +703,11 @@ export default function Home() {
     isLoading ||
     (inputMode === "text" ? !inputText.trim() : !selectedFile);
 
+  // Group items for "What They're Not Telling You"
+  const statedUntelling = whatTheyAreNotTellingYouItems.filter((item) => item.category === "Stated");
+  const impliedUntelling = whatTheyAreNotTellingYouItems.filter((item) => item.category === "Implied");
+  const verifyUntelling = whatTheyAreNotTellingYouItems.filter((item) => item.category === "Worth verifying");
+
   return (
     <div className="min-h-screen bg-[#F4F6F9] text-[#0F172A] font-sans transition-colors duration-200 overflow-x-hidden relative">
       {/* Dynamic connecting narrative thread line overlay */}
@@ -667,7 +721,7 @@ export default function Home() {
             position: "absolute",
             left: "-9999px",
             top: "-9999px",
-            width: "800px", // Standard width for high-quality single-page / multi-page render
+            width: "800px",
             backgroundColor: "#FFFFFF",
             color: "#0F172A",
             padding: "40px",
@@ -679,14 +733,12 @@ export default function Home() {
           {/* Header/Logo */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "2px solid #E2E8F0", paddingBottom: "20px", marginBottom: "30px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {/* Inline SVG Logo Mark: The Resolved Loop */}
               <svg
                 style={{ height: "36px", width: "54px" }}
                 viewBox="0 0 48 32"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                {/* Tangled / Confused Loop (Slate-900 / #0F172A) */}
                 <path
                   d="M 6 18 C 6 10, 13 6, 17 6 C 23 6, 23 20, 17 20 C 13 20, 10 16, 10 12 C 10 8, 14 6, 18 8"
                   stroke="#0F172A"
@@ -694,7 +746,6 @@ export default function Home() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                {/* Resolved Sweep (Teal-600 / #0D9488) */}
                 <path
                   d="M 18 8 C 22 10, 26 24, 34 24 C 39 24, 42 18, 42 12"
                   stroke="#0D9488"
@@ -702,7 +753,6 @@ export default function Home() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                {/* Core Dot (Teal-600 / #0D9488) */}
                 <circle cx="42" cy="12" r="3.2" fill="#0D9488" />
               </svg>
               <span style={{ fontSize: "28px", fontWeight: "600", color: "#0F172A", letterSpacing: "0.05em" }}>Clario</span>
@@ -722,7 +772,7 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Confidence Section (Always near the top) */}
+          {/* Confidence Section */}
           {confidenceLevel && (
             <div style={{
               backgroundColor: confidenceLevel === "high" ? "#EFF6FF" : confidenceLevel === "medium" ? "#F1F5F9" : "#FFF7ED",
@@ -756,174 +806,88 @@ export default function Home() {
             </div>
           )}
 
-          {/* Scam Risk Alert (If Medium or High) */}
-          {(riskLevel === "medium" || riskLevel === "high") && (
-            <div style={{
-              backgroundColor: riskLevel === "high" ? "#FCE8E6" : "#FEF7E0",
-              border: `1.5px solid ${riskLevel === "high" ? "#C5221F" : "#B06000"}`,
-              borderRadius: "12px",
-              padding: "20px",
-              marginBottom: "30px",
-            }}>
-              <span style={{
-                fontSize: "13px",
-                fontWeight: "900",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: riskLevel === "high" ? "#C5221F" : "#B06000",
-                display: "block",
-                marginBottom: "8px"
-              }}>
-                RISK LEVEL: {riskLevel.toUpperCase()}
-              </span>
-              <p style={{
-                fontSize: "15px",
-                fontWeight: "700",
-                lineHeight: "1.5",
-                margin: "0",
-                color: riskLevel === "high" ? "#7F1D1D" : "#78350F"
-              }}>
-                {riskReason}
-              </p>
-            </div>
-          )}
-
-          {/* Manipulation Tactics (If present) */}
-          {manipulationFlags && manipulationFlags.length > 0 && (
-            <div style={{
-              backgroundColor: "#F3E8FF",
-              border: "1.5px solid #6B21A8",
-              borderRadius: "12px",
-              padding: "20px",
-              marginBottom: "30px",
-            }}>
-              <span style={{
-                fontSize: "13px",
-                fontWeight: "900",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "#6B21A8",
-                display: "block",
-                marginBottom: "8px"
-              }}>
-                MANIPULATION TACTICS OBSERVED
-              </span>
-              <ul style={{
-                fontSize: "15px",
-                fontWeight: "700",
-                lineHeight: "1.5",
-                margin: "0",
-                paddingLeft: "20px",
-                color: "#6B21A8",
-                listStyleType: "disc",
-              }}>
-                {manipulationFlags.map((flag, idx) => (
-                  <li key={idx} style={{ marginBottom: "6px" }}>{flag}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Omission Flags (What's Missing) (If present) */}
-          {omissionFlags && omissionFlags.length > 0 && (
-            <div style={{
-              backgroundColor: "#F8FAFC",
-              border: "1.5px dashed #94A3B8",
-              borderRadius: "12px",
-              padding: "20px",
-              marginBottom: "30px",
-            }}>
-              <span style={{
-                fontSize: "13px",
-                fontWeight: "900",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "#334155",
-                display: "block",
-                marginBottom: "4px"
-              }}>
-                WHAT&apos;S MISSING
-              </span>
-              <span style={{
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#475569",
-                display: "block",
-                marginBottom: "12px"
-              }}>
-                Sometimes what&apos;s left out matters as much as what&apos;s said.
-              </span>
-              <ul style={{
-                fontSize: "15px",
-                fontWeight: "700",
-                lineHeight: "1.5",
-                margin: "0",
-                paddingLeft: "20px",
-                color: "#334155",
-                listStyleType: "disc",
-              }}>
-                {omissionFlags.map((flag, idx) => (
-                  <li key={idx} style={{ marginBottom: "6px" }}>{flag}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Simplified Explanation Content */}
-          <div style={{ marginBottom: "40px" }}>
+          {/* Softened Risk status block */}
+          <div style={{
+            backgroundColor: riskLevel === "high" ? "#FCE8E6" : riskLevel === "medium" ? "#FEF7E0" : "#E6F4EA",
+            border: `1.5px solid ${riskLevel === "high" ? "#C5221F" : riskLevel === "medium" ? "#B06000" : "#137333"}`,
+            borderRadius: "12px",
+            padding: "20px",
+            marginBottom: "30px",
+          }}>
             <span style={{
-              fontSize: "12px",
-              fontWeight: "800",
+              fontSize: "13px",
+              fontWeight: "900",
               textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: "#475569",
-              display: "block",
-              marginBottom: "16px"
+              letterSpacing: "0.08em",
+              color: riskLevel === "high" ? "#C5221F" : riskLevel === "medium" ? "#B06000" : "#137333",
+              display: "block"
             }}>
-              Simplified Explanation
+              ANALYSIS STATUS: {riskLevel === "high" ? "WORTH A CLOSER LOOK" : riskLevel === "medium" ? "POSSIBLE CONCERN" : "NO OBVIOUS CONCERNS DETECTED"}
             </span>
-            <div style={{
-              fontSize: "19px", // Large-print (> 16pt equivalent)
-              lineHeight: "1.7", // Generous line spacing
-              color: "#0F172A",
-            }}>
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => (
-                    <p style={{ marginBottom: "20px" }}>
-                      {children}
-                    </p>
-                  ),
-                  ul: ({ children }) => (
-                    <ul style={{ paddingLeft: "30px", listStyleType: "disc", marginBottom: "20px" }}>
-                      {children}
-                    </ul>
-                  ),
-                  ol: ({ children }) => (
-                    <ol style={{ paddingLeft: "30px", listStyleType: "decimal", marginBottom: "20px" }}>
-                      {children}
-                    </ol>
-                  ),
-                  li: ({ children }) => (
-                    <li style={{ marginBottom: "8px" }}>
-                      {children}
-                    </li>
-                  ),
-                  strong: ({ children }) => (
-                    <strong style={{ fontWeight: "bold" }}>
-                      {children}
-                    </strong>
-                  ),
-                  em: ({ children }) => (
-                    <em style={{ fontStyle: "italic" }}>
-                      {children}
-                    </em>
-                  ),
-                }}
-              >
-                {explanation}
-              </ReactMarkdown>
+          </div>
+
+          {/* Section 1: Understand It */}
+          <div style={{ marginBottom: "30px" }}>
+            <span style={{ fontSize: "14px", fontWeight: "800", textTransform: "uppercase", color: "#0D9488", display: "block", marginBottom: "10px" }}>
+              1. Understand It
+            </span>
+            <div style={{ fontSize: "16px", lineHeight: "1.6", color: "#0F172A" }}>
+              <ReactMarkdown>{understandItText}</ReactMarkdown>
             </div>
+          </div>
+
+          {/* Section 2: What Matters */}
+          {whatMattersItems.length > 0 && (
+            <div style={{ marginBottom: "30px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "800", textTransform: "uppercase", color: "#0D9488", display: "block", marginBottom: "10px" }}>
+                2. What Matters
+              </span>
+              <ul style={{ fontSize: "15px", lineHeight: "1.6", color: "#0F172A", listStyleType: "disc", paddingLeft: "20px" }}>
+                {whatMattersItems.map((item, idx) => (
+                  <li key={idx} style={{ marginBottom: "6px" }}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Section 3: What They're Not Telling You */}
+          {whatTheyAreNotTellingYouItems.length > 0 && (
+            <div style={{ marginBottom: "30px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "800", textTransform: "uppercase", color: "#0D9488", display: "block", marginBottom: "10px" }}>
+                3. What They&apos;re Not Telling You
+              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {statedUntelling.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: "13px", fontWeight: "800", color: "#475569", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Stated:</span>
+                    <ul style={{ fontSize: "14px", listStyleType: "disc", paddingLeft: "20px", color: "#334155" }}>
+                      {statedUntelling.map((item, idx) => <li key={idx}>{item.text}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {impliedUntelling.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: "13px", fontWeight: "800", color: "#475569", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Implied:</span>
+                    <ul style={{ fontSize: "14px", listStyleType: "disc", paddingLeft: "20px", color: "#334155" }}>
+                      {impliedUntelling.map((item, idx) => <li key={idx}>{item.text}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {verifyUntelling.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: "13px", fontWeight: "800", color: "#475569", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Worth verifying:</span>
+                    <ul style={{ fontSize: "14px", listStyleType: "disc", paddingLeft: "20px", color: "#334155" }}>
+                      {verifyUntelling.map((item, idx) => <li key={idx}>{item.text}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Disclaimer (Quietly printed) */}
+          <div style={{ marginTop: "30px", borderTop: "1px solid #E2E8F0", paddingTop: "15px", fontSize: "11px", color: "#64748B", fontStyle: "italic", textAlign: "center" }}>
+            This is an AI-generated analysis, not a guarantee. Verify important information before making legal, financial, or personal decisions.
           </div>
 
           {/* Footer Note */}
@@ -932,7 +896,7 @@ export default function Home() {
               Generated by Clario — clario-rose.vercel.app
             </p>
             <p style={{ fontSize: "12px", fontWeight: "600", color: "#475569", marginTop: "4px", marginBottom: "0" }}>
-              Empowering reading with clarity, compassion, and absolute privacy.
+              Empowering reading with clarity, compassion, and privacy-first design.
             </p>
           </div>
         </div>
@@ -1372,12 +1336,12 @@ export default function Home() {
 
               {/* Result Card Display */}
               {explanation && !isLoading && (
-                <div id="result-card-display" className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md p-6 md:p-8 space-y-6 transition-all duration-300 animate-fade-in relative z-20">
+                <div id="result-card-display" className="bg-white rounded-2xl border border-[#E2E8F0] shadow-md p-6 md:p-8 space-y-8 transition-all duration-300 animate-fade-in relative z-20">
 
                   {/* Header section with Actions */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
-                    <h2 className="text-xl md:text-2xl font-bold text-[#0F172A]">
-                      Simple Explanation
+                    <h2 className="text-xl md:text-2xl font-bold text-[#0F172A] font-display">
+                      Simple Analysis
                     </h2>
 
                     {/* Actions: Copy & Print */}
@@ -1512,7 +1476,7 @@ export default function Home() {
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002-2H8a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                             </svg>
-                            Copy Explanation
+                            Copy Analysis
                           </>
                         )}
                       </button>
@@ -1551,7 +1515,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Risk Badge & Callout Section - Top of the card, above explanation text */}
+                  {/* Softened Risk / Confidence Meter Section */}
                   <div className="flex flex-col gap-4">
                     <div className="flex flex-wrap gap-2 items-center">
                       {/* Confidence Badge */}
@@ -1596,40 +1560,25 @@ export default function Home() {
                         </span>
                       )}
 
-                      {riskLevel === "low" && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#E6F4EA] text-[#137333] border border-[#137333]/15 uppercase tracking-wide">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#137333]" />
-                          No obvious risk detected
+                      {/* Softened Risk status Badges */}
+                      {riskLevel === "high" && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FCE8E6] text-[#7F1D1D] border border-[#7F1D1D]/15 uppercase tracking-wide">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#7F1D1D]" />
+                          Worth a Closer Look
                         </span>
                       )}
 
                       {riskLevel === "medium" && (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FEF7E0] text-[#78350F] border border-[#78350F]/15 uppercase tracking-wide">
                           <span className="h-1.5 w-1.5 rounded-full bg-[#78350F]" />
-                          Medium Risk
+                          Possible Concern
                         </span>
                       )}
 
-                      {riskLevel === "high" && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#FCE8E6] text-[#7F1D1D] border border-[#7F1D1D]/15 uppercase tracking-wide animate-pulse">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#7F1D1D]" />
-                          High Risk
-                        </span>
-                      )}
-
-                      {/* Manipulation Badge */}
-                      {manipulationFlags && manipulationFlags.length > 0 && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#F3E8FF] text-[#6B21A8] border border-[#6B21A8]/15 uppercase tracking-wide">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#6B21A8]" />
-                          Manipulation Tactics Observed
-                        </span>
-                      )}
-
-                      {/* Omissions Badge */}
-                      {omissionFlags && omissionFlags.length > 0 && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#F8FAFC] text-[#334155] border border-[#94A3B8]/30 uppercase tracking-wide">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#64748B]" />
-                          Notable Omissions Found
+                      {riskLevel === "low" && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold bg-[#E6F4EA] text-[#137333] border border-[#137333]/15 uppercase tracking-wide">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[#137333]" />
+                          No obvious concerns detected
                         </span>
                       )}
                     </div>
@@ -1647,57 +1596,85 @@ export default function Home() {
                         {confidenceNote}
                       </div>
                     )}
+                  </div>
 
-                    {/* Risk Reason Callouts */}
-                    {riskLevel === "medium" && riskReason && (
-                      <div className="p-4 bg-[#FEF7E0]/60 border border-[#B06000]/15 text-[#78350F] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
-                        {riskReason}
+                  {/* THREE-LAYER ANALYSIS VISUALS */}
+                  <div className="space-y-8 text-left">
+                    {/* Layer 1: Understand It */}
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-bold text-[#0D9488] uppercase tracking-widest block border-b border-[#E2E8F0] pb-2">
+                        1. Understand It
+                      </h3>
+                      <div className="prose max-w-none">
+                        {renderExplanation(understandItText)}
                       </div>
-                    )}
+                    </div>
 
-                    {riskLevel === "high" && riskReason && (
-                      <div className="p-4 bg-[#FCE8E6]/60 border border-[#C5221F]/15 text-[#7F1D1D] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
-                        {riskReason}
-                      </div>
-                    )}
-
-                    {/* Manipulation Flags List */}
-                    {manipulationFlags && manipulationFlags.length > 0 && (
-                      <div className="p-4 bg-[#F3E8FF]/40 border border-[#6B21A8]/15 text-[#6B21A8] rounded-xl text-xs md:text-sm font-semibold leading-relaxed space-y-2">
-                        <p className="font-extrabold tracking-wide uppercase text-[10px] text-[#6B21A8]/85">
-                          Observed Tactics:
-                        </p>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {manipulationFlags.map((flag, flagIdx) => (
-                            <li key={flagIdx}>{flag}</li>
+                    {/* Layer 2: What Matters */}
+                    {whatMattersItems.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-xs font-bold text-[#0D9488] uppercase tracking-widest block border-b border-[#E2E8F0] pb-2">
+                          2. What Matters
+                        </h3>
+                        <ul className="list-disc pl-5 space-y-2 text-sm md:text-base font-semibold text-slate-800">
+                          {whatMattersItems.map((item, idx) => (
+                            <li key={idx} className="leading-relaxed">{item}</li>
                           ))}
                         </ul>
                       </div>
                     )}
 
-                    {/* Omissions Callout Box (What's Missing) */}
-                    {omissionFlags && omissionFlags.length > 0 && (
-                      <div className="p-5 bg-[#F8FAFC] border border-dashed border-[#94A3B8] text-[#334155] rounded-xl text-xs md:text-sm font-semibold leading-relaxed space-y-3">
-                        <div className="space-y-0.5">
-                          <p className="font-extrabold tracking-wide uppercase text-[11px] text-[#334155]">
-                            What&apos;s Missing
-                          </p>
-                          <p className="text-[#475569] text-xs">
-                            Sometimes what&apos;s left out matters as much as what&apos;s said.
-                          </p>
+                    {/* Layer 3: What They're Not Telling You */}
+                    {whatTheyAreNotTellingYouItems.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-xs font-bold text-[#0D9488] uppercase tracking-widest block border-b border-[#E2E8F0] pb-2">
+                          3. What They&apos;re Not Telling You
+                        </h3>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          {/* Stated Sub-Section */}
+                          {statedUntelling.length > 0 && (
+                            <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Stated:</span>
+                              <ul className="list-disc pl-5 space-y-1.5 text-xs md:text-sm font-semibold text-slate-700">
+                                {statedUntelling.map((item, idx) => (
+                                  <li key={idx} className="leading-relaxed">{item.text}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Implied Sub-Section */}
+                          {impliedUntelling.length > 0 && (
+                            <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Implied:</span>
+                              <ul className="list-disc pl-5 space-y-1.5 text-xs md:text-sm font-semibold text-slate-700">
+                                {impliedUntelling.map((item, idx) => (
+                                  <li key={idx} className="leading-relaxed">{item.text}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Worth verifying Sub-Section */}
+                          {verifyUntelling.length > 0 && (
+                            <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Worth verifying:</span>
+                              <ul className="list-disc pl-5 space-y-1.5 text-xs md:text-sm font-semibold text-slate-700">
+                                {verifyUntelling.map((item, idx) => (
+                                  <li key={idx} className="leading-relaxed">{item.text}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
-                        <ul className="list-disc pl-5 space-y-1 text-[#334155]">
-                          {omissionFlags.map((flag, flagIdx) => (
-                            <li key={flagIdx}>{flag}</li>
-                          ))}
-                        </ul>
                       </div>
                     )}
                   </div>
 
-                  {/* Explanation Content */}
-                  <div className="prose max-w-none">
-                    {renderExplanation(explanation)}
+                  {/* Quiet Disclaimer Footnote */}
+                  <div className="text-[11px] text-slate-500 text-center italic leading-relaxed pt-2">
+                    This is an AI-generated analysis, not a guarantee. Verify important information before making legal, financial, or personal decisions.
                   </div>
 
                   {/* Reset: Try Another Button */}
@@ -1718,7 +1695,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Grounded Showcase Features — REDESIGNED WITH VARYING SECTION RHYTHM */}
+      {/* Grounded Showcase Features */}
       <section className="border-t border-[#E2E8F0] py-24 md:py-32 space-y-28 md:space-y-40 bg-white/50 relative">
         <div className="max-w-7xl w-full mx-auto px-6 md:px-12 lg:px-16 space-y-28 md:space-y-40 relative z-10">
 
@@ -1783,10 +1760,10 @@ export default function Home() {
               </svg>
             </div>
             <h4 className="text-2xl md:text-4xl font-display font-medium text-[#0F172A] tracking-[-0.02em]">
-              Compassionate privacy by design
+              Privacy-first by design
             </h4>
             <p className="text-[#334155] text-sm md:text-lg leading-relaxed font-semibold max-w-2xl mx-auto">
-              Understanding before you trust starts with a space that respects you completely. We process your documents in real-time and never store original text or file contents. By logging only anonymous, non-blocking metrics, we safeguard your right to read and decide in absolute privacy.
+              We process your documents in real-time and never store raw text or file uploads for guest users. Registered users can optionally save their history securely under their own account. We only record anonymous high-level metadata to measure our impact, keeping your reading habits private.
             </p>
           </div>
 

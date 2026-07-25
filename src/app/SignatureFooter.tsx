@@ -126,7 +126,7 @@ export function SignatureFooter() {
         {/* Quiet footer details at the bottom */}
         <div className="w-full border-t border-[#E2E8F0] lg:border-[#E2E8F0]/50 pt-6 lg:pt-3 flex flex-col lg:flex-row justify-between items-center text-xs text-[#334155] font-semibold tracking-wide text-center lg:text-left gap-4 lg:gap-0 lg:absolute lg:bottom-4 lg:inset-x-12 xl:inset-x-16 lg:px-0">
           <p className="leading-relaxed max-w-md lg:max-w-[45%] mx-auto lg:mx-0 text-center lg:text-left">
-            We value your trust. Clario processes all documents in real-time and never stores your raw text or file uploads.
+            Privacy-first by design. Clario processes documents in real-time. We never store raw text or file uploads for guest users, and only save them for signed-in users who choose to keep a personal history.
           </p>
           <p className="my-1 lg:my-0 lg:text-center">
             <Link
