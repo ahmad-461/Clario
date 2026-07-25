@@ -11,10 +11,10 @@ import { User } from "@supabase/supabase-js";
 import { CHARACTER_LIMIT, FILE_SIZE_LIMIT_BYTES } from "@/lib/constants";
 
 const TONES = [
-  { id: "simple", label: "Simple" },
-  { id: "student", label: "Student" },
-  { id: "teacher", label: "Teacher" },
-  { id: "elderly-friendly", label: "Elderly-friendly" },
+  { id: "simple", label: "Just explain it" },
+  { id: "student", label: "For a student" },
+  { id: "teacher", label: "For teaching" },
+  { id: "elderly-friendly", label: "For an older adult" },
 ];
 
 interface WhatTheyAreNotTellingYouItem {
@@ -768,7 +768,7 @@ export default function Home() {
               Audience Tone Mode
             </span>
             <span style={{ fontSize: "18px", fontWeight: "800", color: "#0D9488" }}>
-              {TONES.find((t) => t.id === selectedTone)?.label || "Simple"} Explanation
+              {TONES.find((t) => t.id === selectedTone)?.label || "Just explain it"} Explanation
             </span>
           </div>
 
@@ -908,6 +908,102 @@ export default function Home() {
       {/* Distinctive Hero Section with Hybrid Fusion Slider */}
       <ClarioHero />
 
+      {/* PART 2: DEDICATED VISUAL FLOW TIMELINE BLOCK */}
+      <section className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 py-10 md:py-14 border-t border-b border-[#E2E8F0] bg-white relative z-10">
+        <div className="flex flex-col items-center text-center space-y-4 mb-10 max-w-2xl mx-auto">
+          <span className="text-xs font-bold tracking-widest text-[#0D9488] uppercase">
+            How it works
+          </span>
+          <h2 className="text-2xl md:text-3xl font-display font-medium text-[#0F172A] leading-tight tracking-[-0.02em]">
+            The path from confusion to confident clarity
+          </h2>
+          <p className="text-sm text-[#475569] font-semibold leading-relaxed">
+            Our human-centered process takes raw information and transforms it into structured layers designed to guide your decision-making safely and securely.
+          </p>
+        </div>
+
+        {/* Elegant Stepper Flow Diagram */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 lg:gap-8 relative">
+          {/* Connector line (desktop only) */}
+          <div className="hidden md:block absolute top-7 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-amber-400 via-[#0D9488] to-[#137333] -z-10" />
+
+          {/* Step 1 */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <div className="h-14 w-14 rounded-full bg-[#FFF7ED] border-2 border-amber-500 text-amber-700 font-bold flex items-center justify-center text-xl shadow-sm">
+              📄
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#0F172A]">
+                1. Confusing Info
+              </h4>
+              <p className="text-[11px] font-semibold text-[#475569] leading-relaxed max-w-[180px] mx-auto">
+                Dense legalese, auto-renewals, or complex terms.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <div className="h-14 w-14 rounded-full bg-[#F0FDFA] border-2 border-[#0D9488] text-[#0D9488] font-bold flex items-center justify-center text-xl shadow-sm">
+              ✨
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#0D9488]">
+                2. Plain Language
+              </h4>
+              <p className="text-[11px] font-semibold text-[#475569] leading-relaxed max-w-[180px] mx-auto">
+                Layer 1: Instantly explained in conversational, human terms.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <div className="h-14 w-14 rounded-full bg-[#EFF6FF] border-2 border-blue-500 text-blue-700 font-bold flex items-center justify-center text-xl shadow-sm">
+              📋
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#1E40AF]">
+                3. What Matters
+              </h4>
+              <p className="text-[11px] font-semibold text-[#475569] leading-relaxed max-w-[180px] mx-auto">
+                Layer 2: Scannable key dates, fees, and requirements.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 4 */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <div className="h-14 w-14 rounded-full bg-[#F3E8FF] border-2 border-purple-500 text-purple-700 font-bold flex items-center justify-center text-xl shadow-sm">
+              🕵️
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#6B21A8]">
+                4. What You Missed
+              </h4>
+              <p className="text-[11px] font-semibold text-[#475569] leading-relaxed max-w-[180px] mx-auto">
+                Layer 3: Hidden risks, conditions, and tricks flagged.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 5 */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <div className="h-14 w-14 rounded-full bg-[#E6F4EA] border-2 border-[#137333] text-[#137333] font-bold flex items-center justify-center text-xl shadow-sm">
+              🛡️
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#137333]">
+                5. Better Decision
+              </h4>
+              <p className="text-[11px] font-semibold text-[#475569] leading-relaxed max-w-[180px] mx-auto">
+                Understand fully before you sign, click, or trust.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Main Workspace Container — REDESIGNED AS ASYMMETRIC GRID */}
       <div
         id="workspace-tool"
@@ -960,6 +1056,10 @@ export default function Home() {
                       );
                     })}
                   </div>
+                  {/* Microcopy to communicate adapted presentation vs invariant facts */}
+                  <div className="text-xs text-[#475569] font-medium leading-relaxed italic text-left -mt-1 animate-fade-in">
+                    Note: We adapt how the explanation is written for each audience—the core facts, obligations, and risk levels remain exactly the same.
+                  </div>
                 </div>
 
                 {/* Input Card with Tabs */}
@@ -1008,7 +1108,7 @@ export default function Home() {
                       Upload File
                     </button>
 
-                    {/* Sliding active indicator bar */}
+                    {/* Sliding active underline indicator bar */}
                     <div
                       className={`absolute bottom-0 left-0 h-0.5 w-1/2 bg-[#0D9488] transition-transform duration-300 ease-out z-20 ${
                         inputMode === "text" ? "translate-x-0" : "translate-x-full"
@@ -1713,6 +1813,9 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Story Text (5 cols) */}
             <div className="lg:col-span-5 space-y-6 text-left order-2 lg:order-1">
+              <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/50 px-3 py-1 rounded-full uppercase tracking-widest w-fit block mb-2">
+                Supporting Layer 3: Spotting what could go wrong
+              </span>
               <div className="p-3 bg-red-50 text-[#C5221F] w-fit rounded-xl">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -1754,6 +1857,9 @@ export default function Home() {
 
           {/* Feature 2: Privacy (Spacious Text-Forward Statement) */}
           <div className="max-w-3xl mx-auto text-center space-y-6 md:space-y-8 bg-[#F0FDFA] border-2 border-[#0D9488]/10 rounded-2xl p-8 md:p-12 shadow-sm">
+            <span className="text-[10px] font-bold text-[#0D9488] bg-white/80 border border-[#0D9488]/10 px-3 py-1 rounded-full uppercase tracking-widest w-fit mx-auto block mb-2">
+              Grounded in confidential processing
+            </span>
             <div className="inline-flex p-3 bg-white text-[#0D9488] rounded-xl shadow-sm">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -1771,6 +1877,9 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             {/* Left Pull-Quote (7 cols) */}
             <div className="lg:col-span-7 text-left space-y-6">
+              <span className="text-[10px] font-bold text-[#0D9488] bg-teal-50 border border-[#0D9488]/10 px-3 py-1 rounded-full uppercase tracking-widest w-fit block mb-2">
+                Supporting Layer 1: Tailoring clarity to how you read best
+              </span>
               <span className="text-xs font-bold text-[#0D9488] uppercase tracking-widest block">
                 Human-Centered Technology
               </span>
@@ -1786,28 +1895,28 @@ export default function Home() {
             <div className="lg:col-span-5 grid grid-cols-2 gap-4">
               <div className="bg-[#EFF6FF] border border-blue-100 p-5 rounded-xl flex flex-col gap-2 shadow-sm">
                 <span className="text-base">👵</span>
-                <span className="font-bold text-sm text-blue-900">Elderly Friendly</span>
+                <span className="font-bold text-sm text-blue-900 font-display">For an older adult</span>
                 <p className="text-[11px] text-[#334155] font-semibold leading-relaxed">
                   Scaled typography, high contrast, and zero layout shifts.
                 </p>
               </div>
               <div className="bg-[#F0FDFA] border border-teal-100 p-5 rounded-xl flex flex-col gap-2 shadow-sm">
                 <span className="text-base">✨</span>
-                <span className="font-bold text-sm text-[#0F766E]">Simple Mode</span>
+                <span className="font-bold text-sm text-[#0F766E] font-display">Just explain it</span>
                 <p className="text-[11px] text-[#334155] font-semibold leading-relaxed">
                   Straightforward, everyday language devoid of jargon.
                 </p>
               </div>
               <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl flex flex-col gap-2 shadow-sm">
                 <span className="text-base">🎓</span>
-                <span className="font-bold text-sm text-[#0F172A]">Student Mode</span>
+                <span className="font-bold text-sm text-[#0F172A] font-display">For a student</span>
                 <p className="text-[11px] text-[#334155] font-semibold leading-relaxed">
                   Summarized concepts perfect for study notes and exams.
                 </p>
               </div>
               <div className="bg-slate-50 border border-slate-100 p-5 rounded-xl flex flex-col gap-2 shadow-sm">
                 <span className="text-base">🏫</span>
-                <span className="font-bold text-sm text-[#0F172A]">Teacher Mode</span>
+                <span className="font-bold text-sm text-[#0F172A] font-display">For teaching</span>
                 <p className="text-[11px] text-[#334155] font-semibold leading-relaxed">
                   Structured explanations suitable for direct instruction.
                 </p>
