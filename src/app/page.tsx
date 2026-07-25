@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { Header } from "./Header";
 import { ClarioHero } from "./ClarioHero";
@@ -1774,7 +1775,13 @@ export default function Home() {
 
                   {/* Quiet Disclaimer Footnote */}
                   <div className="text-[11px] text-slate-500 text-center italic leading-relaxed pt-2">
-                    This is an AI-generated analysis, not a guarantee. Verify important information before making legal, financial, or personal decisions.
+                    This is an AI-generated analysis, not a guarantee. Verify important information before making legal, financial, or personal decisions.{" "}
+                    <Link
+                      href="/methodology"
+                      className="text-[#0D9488] hover:text-[#0F766E] font-bold underline decoration-dotted underline-offset-2 ml-1"
+                    >
+                      How our methodology works
+                    </Link>
                   </div>
 
                   {/* Reset: Try Another Button */}
@@ -1822,10 +1829,10 @@ export default function Home() {
                 </svg>
               </div>
               <h4 className="text-2xl md:text-3xl font-display font-medium text-[#0F172A]">
-                Deception &amp; scam detection
+                Potential risk &amp; scam detection
               </h4>
               <p className="text-[#334155] text-sm md:text-base leading-relaxed font-semibold">
-                Clario scans documents for manipulative language, false urgency, and liability traps so you don&apos;t sign, click, or trust something dangerous. Rather than hiding behind legal disclaimers, we flag these predatory psychological triggers instantly to protect your decisions.
+                Clario scans documents for potential manipulative language, artificial urgency, and common liability traps to help you spot suspicious patterns. Working alongside our honest disclaimers, we flag these typical psychological triggers to provide an extra layer of caution before you sign, click, or trust.
               </p>
             </div>
 

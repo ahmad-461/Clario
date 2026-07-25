@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import { Header } from "../Header";
 import { SignatureFooter } from "../SignatureFooter";
@@ -1132,7 +1133,13 @@ export default function WaitingRoomPage() {
 
                 {/* Footnote disclaimer */}
                 <div className="text-[11px] text-slate-500 text-center italic leading-relaxed pt-2">
-                  This is an AI-generated analysis, not a guarantee. Verify important information before making legal, financial, or personal decisions.
+                  This is an AI-generated analysis, not a guarantee. Verify important information before making legal, financial, or personal decisions.{" "}
+                  <Link
+                    href="/methodology"
+                    className="text-[#0D9488] hover:text-[#0F766E] font-bold underline decoration-dotted underline-offset-2 ml-1"
+                  >
+                    How our methodology works
+                  </Link>
                 </div>
 
                 {/* Reset button */}
