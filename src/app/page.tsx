@@ -535,7 +535,7 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to simplify content.");
+        throw new Error(data.error || "Failed to untangle content.");
       }
 
       setExplanation(data.explanation);
@@ -1022,7 +1022,7 @@ export default function Home() {
               </p>
             </blockquote>
             <p className="text-sm text-[#475569] font-semibold leading-relaxed max-w-sm">
-              Paste confusing messages, lease agreements, bank warnings, or upload PDFs/images. Clario will instantly simplify the content according to your chosen audience tone.
+              Paste confusing messages, lease agreements, bank warnings, or upload PDFs/images. Clario will instantly untangle the content according to your chosen audience tone.
             </p>
           </div>
 
@@ -1030,37 +1030,6 @@ export default function Home() {
           <div className="lg:col-span-8 w-full flex flex-col gap-8 z-10">
             <main className="w-full space-y-8">
               <form onSubmit={handleSubmit} className="space-y-8">
-
-                {/* Tone Selector */}
-                <div className="flex flex-col items-start gap-3">
-                  <span className="text-xs font-medium text-[#334155] uppercase tracking-widest">
-                    Audience Tone Mode
-                  </span>
-                  <div className="inline-flex p-1.5 bg-[#F4F6F9] border border-[#E2E8F0] rounded-full shadow-inner gap-1.5 max-w-full overflow-x-auto scrollbar-none">
-                    {TONES.map((tone) => {
-                      const isActive = selectedTone === tone.id;
-                      return (
-                        <button
-                          key={tone.id}
-                          type="button"
-                          disabled={isLoading}
-                          onClick={() => handleToneChange(tone.id)}
-                          className={`px-4 py-2 md:px-6 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
-                            isActive
-                              ? "bg-[#0D9488] text-white shadow-md border border-[#0F766E]/10 font-bold"
-                              : "text-[#334155] hover:bg-white hover:shadow-sm hover:text-[#0F172A] disabled:opacity-50"
-                          }`}
-                        >
-                          {tone.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Microcopy to communicate adapted presentation vs invariant facts */}
-                  <div className="text-xs text-[#475569] font-medium leading-relaxed italic text-left -mt-1 animate-fade-in">
-                    Note: We adapt how the explanation is written for each audience—the core facts, obligations, and risk levels remain exactly the same.
-                  </div>
-                </div>
 
                 {/* Input Card with Tabs */}
                 <div className={`relative bg-white rounded-2xl border transition duration-300 overflow-hidden ${
@@ -1341,6 +1310,37 @@ export default function Home() {
 
                 </div>
 
+                {/* Tone Selector */}
+                <div className="flex flex-col items-start gap-3">
+                  <span className="text-xs font-medium text-[#334155] uppercase tracking-widest">
+                    Audience Tone Mode
+                  </span>
+                  <div className="inline-flex p-1.5 bg-[#F4F6F9] border border-[#E2E8F0] rounded-full shadow-inner gap-1.5 max-w-full overflow-x-auto scrollbar-none">
+                    {TONES.map((tone) => {
+                      const isActive = selectedTone === tone.id;
+                      return (
+                        <button
+                          key={tone.id}
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => handleToneChange(tone.id)}
+                          className={`px-4 py-2 md:px-6 md:py-2.5 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                            isActive
+                              ? "bg-[#0D9488] text-white shadow-md border border-[#0F766E]/10 font-bold"
+                              : "text-[#334155] hover:bg-white hover:shadow-sm hover:text-[#0F172A] disabled:opacity-50"
+                          }`}
+                        >
+                          {tone.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Microcopy to communicate adapted presentation vs invariant facts */}
+                  <div className="text-xs text-[#475569] font-medium leading-relaxed italic text-left -mt-1 animate-fade-in">
+                    Note: We adapt how the explanation is written for each audience—the core facts, obligations, and risk levels remain exactly the same.
+                  </div>
+                </div>
+
                 {/* Error Message Box */}
                 {error && (
                   <div
@@ -1371,19 +1371,19 @@ export default function Home() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        Simplifying...
+                        Untangling...
                       </span>
                     ) : (
-                      "Explain This"
+                      "Untangle This"
                     )}
                   </button>
                 </div>
               </form>
 
               {/* Quiet Entry Point to Waiting Room */}
-              <div className="bg-[#FAF5F0] border border-[#EBE3D5] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in text-left">
+              <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in text-left">
                 <div className="space-y-1">
-                  <p className="text-sm font-bold text-[#78350F]">
+                  <p className="text-sm font-bold text-[#0F172A]">
                     👩‍👦 Helping someone else understand before they sign, click, or trust?
                   </p>
                   <p className="text-xs text-slate-700 font-medium leading-relaxed">
@@ -1392,7 +1392,7 @@ export default function Home() {
                 </div>
                 <a
                   href="/waiting-room"
-                  className="px-4 py-2 bg-[#78350F] hover:bg-[#5F270B] text-white text-xs font-bold rounded-lg transition duration-150 self-start sm:self-auto shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#78350F]"
+                  className="px-4 py-2 bg-[#F4F6F9] hover:bg-[#E2E8F0] border border-[#E2E8F0] text-[#334155] hover:text-[#0F172A] text-xs font-bold rounded-lg transition duration-150 self-start sm:self-auto shrink-0 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488]"
                 >
                   Try the Waiting Room →
                 </a>
@@ -1441,7 +1441,7 @@ export default function Home() {
                   {/* Header section with Actions */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
                     <h2 className="text-xl md:text-2xl font-bold text-[#0F172A] font-display">
-                      Simple Analysis
+                      Untangled Analysis
                     </h2>
 
                     {/* Actions: Copy & Print */}

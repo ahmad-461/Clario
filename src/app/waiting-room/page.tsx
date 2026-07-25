@@ -9,10 +9,10 @@ import { User } from "@supabase/supabase-js";
 import { CHARACTER_LIMIT, FILE_SIZE_LIMIT_BYTES } from "@/lib/constants";
 
 const TONES = [
-  { id: "simple", label: "Simple" },
-  { id: "student", label: "Student" },
-  { id: "teacher", label: "Teacher" },
-  { id: "elderly-friendly", label: "Elderly-friendly" },
+  { id: "simple", label: "Just explain it" },
+  { id: "student", label: "For a student" },
+  { id: "teacher", label: "For teaching" },
+  { id: "elderly-friendly", label: "For an older adult" },
 ];
 
 interface WhatTheyAreNotTellingYouItem {
@@ -257,7 +257,7 @@ export default function WaitingRoomPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to simplify content.");
+        throw new Error(data.error || "Failed to untangle content.");
       }
 
       setExplanation(data.explanation);
@@ -616,32 +616,6 @@ export default function WaitingRoomPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Audience Tone Mode Selector */}
-              <div className="flex flex-col items-start gap-3 bg-[#FAF5F0] border border-[#EBE3D5] p-4 rounded-2xl">
-                <span className="text-xs font-bold text-[#78350F] uppercase tracking-widest">
-                  Choose a tone that suits them best:
-                </span>
-                <div className="inline-flex p-1.5 bg-[#F4F6F9] border border-[#E2E8F0] rounded-full shadow-inner gap-1.5 max-w-full overflow-x-auto scrollbar-none">
-                  {TONES.map((tone) => {
-                    const isActive = selectedTone === tone.id;
-                    return (
-                      <button
-                        key={tone.id}
-                        type="button"
-                        disabled={isLoading}
-                        onClick={() => handleToneChange(tone.id)}
-                        className={`px-4 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
-                          isActive
-                            ? "bg-[#0D9488] text-white shadow-md border border-[#0F766E]/10 font-bold"
-                            : "text-[#334155] hover:bg-white hover:shadow-sm hover:text-[#0F172A] disabled:opacity-50"
-                        }`}
-                      >
-                        {tone.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
               {/* Input Card Container */}
               <div className={`relative bg-white rounded-2xl border transition duration-300 overflow-hidden ${
@@ -821,6 +795,33 @@ export default function WaitingRoomPage() {
                 )}
               </div>
 
+              {/* Audience Tone Mode Selector */}
+              <div className="flex flex-col items-start gap-3 bg-[#FAF5F0] border border-[#EBE3D5] p-4 rounded-2xl">
+                <span className="text-xs font-bold text-[#78350F] uppercase tracking-widest">
+                  Choose a tone that suits them best:
+                </span>
+                <div className="inline-flex p-1.5 bg-[#F4F6F9] border border-[#E2E8F0] rounded-full shadow-inner gap-1.5 max-w-full overflow-x-auto scrollbar-none">
+                  {TONES.map((tone) => {
+                    const isActive = selectedTone === tone.id;
+                    return (
+                      <button
+                        key={tone.id}
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => handleToneChange(tone.id)}
+                        className={`px-4 py-2 rounded-full text-xs md:text-sm font-semibold transition-all duration-150 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0D9488] focus-visible:outline-none ${
+                          isActive
+                            ? "bg-[#0D9488] text-white shadow-md border border-[#0F766E]/10 font-bold"
+                            : "text-[#334155] hover:bg-white hover:shadow-sm hover:text-[#0F172A] disabled:opacity-50"
+                        }`}
+                      >
+                        {tone.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {error && (
                 <div role="alert" className="p-4 bg-[#FEF2F2] border border-[#7F1D1D]/15 rounded-xl flex flex-col gap-1 text-[#7F1D1D] animate-fade-in">
                   <span className="text-xs font-extrabold tracking-widest uppercase">Error</span>
@@ -839,7 +840,7 @@ export default function WaitingRoomPage() {
                     : "bg-[#0D9488] text-white hover:bg-[#0D9488]/90 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:hover:scale-[0.98] transition-transform"
                 }`}
               >
-                {isLoading ? "Analyzing together..." : "Explain this for both of us"}
+                {isLoading ? "Untangling together..." : "Untangle this for both of us"}
               </button>
             </form>
           </div>
@@ -879,7 +880,7 @@ export default function WaitingRoomPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-display font-semibold text-lg text-slate-800">Ready to simplify</h3>
+                  <h3 className="font-display font-semibold text-lg text-slate-800">Ready to untangle</h3>
                   <p className="text-sm text-[#475569] font-medium leading-relaxed max-w-sm mt-1.5">
                     Your shared explanation and interactive conversation points will appear here as soon as you type or upload on the left.
                   </p>

@@ -210,14 +210,14 @@ export default function HistoryPage() {
                 <div className="space-y-1.5">
                   <h3 className="text-lg font-bold text-slate-900">Your list is empty</h3>
                   <p className="text-sm font-semibold text-slate-500 leading-relaxed">
-                    You haven&apos;t saved any explanations yet! Go back to the homepage and try simplifying a confusing message or file.
+                    You haven&apos;t saved any explanations yet! Go back to the homepage and try untangling a confusing message or file.
                   </p>
                 </div>
                 <Link
                   href="/"
                   className="px-6 py-2.5 bg-[#0D9488]/10 text-[#0F766E] hover:bg-[#0D9488]/15 font-bold rounded-xl text-sm transition"
                 >
-                  Simplify Something Now
+                  Untangle Something Now
                 </Link>
               </div>
             ) : (

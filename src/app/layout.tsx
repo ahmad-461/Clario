@@ -19,8 +19,8 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Clario - Simple Explanation",
-  description: "Confusing text, explained simply.",
+  title: "Clario — Untangle Confusing Information",
+  description: "Clario untangles confusing documents, legalese, and fine print so you can understand before you sign, click, or trust.",
 };
 
 export default function RootLayout({
