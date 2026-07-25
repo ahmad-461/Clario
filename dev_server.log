@@ -9,17 +9,7 @@
      · serverActions
 
  ✓ Starting...
- ✓ Ready in 1567ms
+ ✓ Ready in 1456ms
  ○ Compiling / ...
- ✓ Compiled / in 9.2s
- HEAD / 200 in 10363ms
- GET / 200 in 488ms
- ○ Compiling /waiting-room ...
- ✓ Compiled /waiting-room in 1477ms
- GET /waiting-room 200 in 1675ms
- ○ Compiling /untangle-log ...
- ✓ Compiled /untangle-log in 694ms
- GET /untangle-log 200 in 889ms
- ○ Compiling /api/untangle-log ...
- ✓ Compiled /api/untangle-log in 1303ms
-Supabase is not configured. Returning fallback mock data.
+ ✓ Compiled / in 10.6s
+ GET / 200 in 11929ms
