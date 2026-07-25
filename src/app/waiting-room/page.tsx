@@ -15,6 +15,11 @@ const TONES = [
   { id: "elderly-friendly", label: "Elderly-friendly" },
 ];
 
+interface WhatTheyAreNotTellingYouItem {
+  category: "Stated" | "Implied" | "Worth verifying";
+  text: string;
+}
+
 export default function WaitingRoomPage() {
   const [user, setUser] = useState<User | null>(null);
 
@@ -25,11 +30,12 @@ export default function WaitingRoomPage() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const [explanation, setExplanation] = useState("");
+  const [explanation, setExplanation] = useState(""); // Unified backup serialized markdown
+  const [understandItText, setUnderstandItText] = useState("");
+  const [whatMattersItems, setWhatMattersItems] = useState<string[]>([]);
+  const [whatTheyAreNotTellingYouItems, setWhatTheyAreNotTellingYouItems] = useState<WhatTheyAreNotTellingYouItem[]>([]);
+
   const [riskLevel, setRiskLevel] = useState("");
-  const [riskReason, setRiskReason] = useState("");
-  const [manipulationFlags, setManipulationFlags] = useState<string[]>([]);
-  const [omissionFlags, setOmissionFlags] = useState<string[]>([]);
   const [confidenceLevel, setConfidenceLevel] = useState("");
   const [confidenceNote, setConfidenceNote] = useState("");
   const [talkingPoints, setTalkingPoints] = useState<string[]>([]);
@@ -202,7 +208,6 @@ export default function WaitingRoomPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Local/frontend validation check
     if (inputMode === "text" && !inputText.trim()) {
       setError("Please paste some text to explain.");
       return;
@@ -218,10 +223,11 @@ export default function WaitingRoomPage() {
     setIsLoading(true);
     setError("");
     setExplanation("");
+    setUnderstandItText("");
+    setWhatMattersItems([]);
+    setWhatTheyAreNotTellingYouItems([]);
+
     setRiskLevel("");
-    setRiskReason("");
-    setManipulationFlags([]);
-    setOmissionFlags([]);
     setConfidenceLevel("");
     setConfidenceNote("");
     setTalkingPoints([]);
@@ -255,10 +261,11 @@ export default function WaitingRoomPage() {
       }
 
       setExplanation(data.explanation);
+      setUnderstandItText(data.understandIt);
+      setWhatMattersItems(data.whatMatters || []);
+      setWhatTheyAreNotTellingYouItems(data.whatTheyAreNotTellingYou || []);
+
       setRiskLevel(data.riskLevel || "low");
-      setRiskReason(data.riskReason || "");
-      setManipulationFlags(data.manipulationFlags || []);
-      setOmissionFlags(data.omissionFlags || []);
       setConfidenceLevel(data.confidenceLevel || "high");
       setConfidenceNote(data.confidenceNote || "");
       setTalkingPoints(data.talkingPoints || []);
@@ -284,8 +291,8 @@ export default function WaitingRoomPage() {
                 tone_mode: selectedTone,
                 explanation_text: data.explanation,
                 risk_level: data.riskLevel || "low",
-                risk_reason: data.riskReason || null,
-                manipulation_flags: data.manipulationFlags || null,
+                risk_reason: null,
+                manipulation_flags: null,
                 confidence_level: data.confidenceLevel || "high",
               });
             if (histErr) {
@@ -323,25 +330,12 @@ export default function WaitingRoomPage() {
         textToCopy += `\n`;
       }
 
-      if (riskLevel === "medium" || riskLevel === "high") {
-        const formattedRisk = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1);
-        textToCopy += `Risk: ${formattedRisk}\nReason: ${riskReason}\n\n`;
-      }
-
-      if (manipulationFlags && manipulationFlags.length > 0) {
-        textToCopy += `Manipulation Flags:\n`;
-        manipulationFlags.forEach((flag) => {
-          textToCopy += `- ${flag}\n`;
-        });
-        textToCopy += `\n`;
-      }
-
-      if (omissionFlags && omissionFlags.length > 0) {
-        textToCopy += `What's Missing:\n`;
-        omissionFlags.forEach((flag) => {
-          textToCopy += `- ${flag}\n`;
-        });
-        textToCopy += `\n`;
+      if (riskLevel === "high") {
+        textToCopy += `Status: Worth a Closer Look\n\n`;
+      } else if (riskLevel === "medium") {
+        textToCopy += `Status: Possible Concern\n\n`;
+      } else {
+        textToCopy += `Status: No obvious concerns detected\n\n`;
       }
 
       if (talkingPoints && talkingPoints.length > 0) {
@@ -352,7 +346,7 @@ export default function WaitingRoomPage() {
         textToCopy += `\n`;
       }
 
-      textToCopy += `Explanation:\n${explanation}`;
+      textToCopy += explanation;
 
       await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
@@ -371,10 +365,11 @@ export default function WaitingRoomPage() {
       setImagePreviewUrl(null);
     }
     setExplanation("");
+    setUnderstandItText("");
+    setWhatMattersItems([]);
+    setWhatTheyAreNotTellingYouItems([]);
+
     setRiskLevel("");
-    setRiskReason("");
-    setManipulationFlags([]);
-    setOmissionFlags([]);
     setConfidenceLevel("");
     setConfidenceNote("");
     setTalkingPoints([]);
@@ -431,6 +426,10 @@ export default function WaitingRoomPage() {
   const isSubmitDisabled =
     isLoading ||
     (inputMode === "text" ? !inputText.trim() : !selectedFile);
+
+  const statedUntelling = whatTheyAreNotTellingYouItems.filter((item) => item.category === "Stated");
+  const impliedUntelling = whatTheyAreNotTellingYouItems.filter((item) => item.category === "Implied");
+  const verifyUntelling = whatTheyAreNotTellingYouItems.filter((item) => item.category === "Worth verifying");
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#0F172A] font-sans overflow-x-hidden relative">
@@ -513,82 +512,68 @@ export default function WaitingRoomPage() {
             </div>
           )}
 
-          {/* Omission Flags (What's Missing) (If present) */}
-          {omissionFlags && omissionFlags.length > 0 && (
-            <div style={{
-              backgroundColor: "#F8FAFC",
-              border: "1.5px dashed #94A3B8",
-              borderRadius: "12px",
-              padding: "20px",
-              marginBottom: "30px",
-            }}>
-              <span style={{
-                fontSize: "13px",
-                fontWeight: "900",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: "#334155",
-                display: "block",
-                marginBottom: "4px"
-              }}>
-                WHAT&apos;S MISSING
+          {/* Section 1: Understand It */}
+          <div style={{ marginBottom: "30px" }}>
+            <span style={{ fontSize: "14px", fontWeight: "800", textTransform: "uppercase", color: "#0D9488", display: "block", marginBottom: "10px" }}>
+              1. Understand It
+            </span>
+            <div style={{ fontSize: "16px", lineHeight: "1.6", color: "#0F172A" }}>
+              <ReactMarkdown>{understandItText}</ReactMarkdown>
+            </div>
+          </div>
+
+          {/* Section 2: What Matters */}
+          {whatMattersItems.length > 0 && (
+            <div style={{ marginBottom: "30px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "800", textTransform: "uppercase", color: "#0D9488", display: "block", marginBottom: "10px" }}>
+                2. What Matters
               </span>
-              <span style={{
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#475569",
-                display: "block",
-                marginBottom: "12px"
-              }}>
-                Sometimes what&apos;s left out matters as much as what&apos;s said.
-              </span>
-              <ul style={{
-                fontSize: "15px",
-                fontWeight: "700",
-                lineHeight: "1.5",
-                margin: "0",
-                paddingLeft: "20px",
-                color: "#334155",
-                listStyleType: "disc",
-              }}>
-                {omissionFlags.map((flag, idx) => (
-                  <li key={idx} style={{ marginBottom: "6px" }}>{flag}</li>
+              <ul style={{ fontSize: "15px", lineHeight: "1.6", color: "#0F172A", listStyleType: "disc", paddingLeft: "20px" }}>
+                {whatMattersItems.map((item, idx) => (
+                  <li key={idx} style={{ marginBottom: "6px" }}>{item}</li>
                 ))}
               </ul>
             </div>
           )}
 
-          {/* Simplified Explanation Content */}
-          <div style={{ marginBottom: "40px" }}>
-            <span style={{
-              fontSize: "12px",
-              fontWeight: "800",
-              textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              color: "#475569",
-              display: "block",
-              marginBottom: "16px"
-            }}>
-              Collaborative Explanation
-            </span>
-            <div style={{
-              fontSize: "19px",
-              lineHeight: "1.7",
-              color: "#0F172A",
-            }}>
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <p style={{ marginBottom: "20px" }}>{children}</p>,
-                  ul: ({ children }) => <ul style={{ paddingLeft: "30px", listStyleType: "disc", marginBottom: "20px" }}>{children}</ul>,
-                  ol: ({ children }) => <ol style={{ paddingLeft: "30px", listStyleType: "decimal", marginBottom: "20px" }}>{children}</ol>,
-                  li: ({ children }) => <li style={{ marginBottom: "8px" }}>{children}</li>,
-                  strong: ({ children }) => <strong style={{ fontWeight: "bold" }}>{children}</strong>,
-                  em: ({ children }) => <em style={{ fontStyle: "italic" }}>{children}</em>,
-                }}
-              >
-                {explanation}
-              </ReactMarkdown>
+          {/* Section 3: What They're Not Telling You */}
+          {whatTheyAreNotTellingYouItems.length > 0 && (
+            <div style={{ marginBottom: "30px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "800", textTransform: "uppercase", color: "#0D9488", display: "block", marginBottom: "10px" }}>
+                3. What They&apos;re Not Telling You
+              </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {statedUntelling.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: "13px", fontWeight: "800", color: "#475569", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Stated:</span>
+                    <ul style={{ fontSize: "14px", listStyleType: "disc", paddingLeft: "20px", color: "#334155" }}>
+                      {statedUntelling.map((item, idx) => <li key={idx}>{item.text}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {impliedUntelling.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: "13px", fontWeight: "800", color: "#475569", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Implied:</span>
+                    <ul style={{ fontSize: "14px", listStyleType: "disc", paddingLeft: "20px", color: "#334155" }}>
+                      {impliedUntelling.map((item, idx) => <li key={idx}>{item.text}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {verifyUntelling.length > 0 && (
+                  <div>
+                    <span style={{ fontSize: "13px", fontWeight: "800", color: "#475569", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Worth verifying:</span>
+                    <ul style={{ fontSize: "14px", listStyleType: "disc", paddingLeft: "20px", color: "#334155" }}>
+                      {verifyUntelling.map((item, idx) => <li key={idx}>{item.text}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
+          )}
+
+          {/* Disclaimer Footnote */}
+          <div style={{ marginTop: "30px", borderTop: "1px solid #E2E8F0", paddingTop: "15px", fontSize: "11px", color: "#64748B", fontStyle: "italic", textAlign: "center" }}>
+            This is an AI-generated analysis, not a guarantee. Verify important information before making legal, financial, or personal decisions.
           </div>
         </div>
       )}
@@ -613,11 +598,11 @@ export default function WaitingRoomPage() {
         </div>
       </section>
 
-      {/* Workspace Grid splits side-by-side on desktop (lg:), stacked on mobile */}
+      {/* Workspace Grid */}
       <main className="max-w-7xl w-full mx-auto px-6 md:px-12 lg:px-16 py-12 md:py-16 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
 
-          {/* LEFT COLUMN: Input Area ("What they received") */}
+          {/* LEFT COLUMN: Input Area */}
           <div className="lg:col-span-6 space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -859,7 +844,7 @@ export default function WaitingRoomPage() {
             </form>
           </div>
 
-          {/* RIGHT COLUMN: Output Area ("Let's understand it together") */}
+          {/* RIGHT COLUMN: Output Area */}
           <div className="lg:col-span-6 space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -1028,30 +1013,17 @@ export default function WaitingRoomPage() {
 
                   {riskLevel === "low" && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#E6F4EA] text-[#0F766E] border border-[#0D9488]/10 uppercase tracking-wide">
-                      No Obvious Risk
+                      No obvious concerns detected
                     </span>
                   )}
                   {riskLevel === "medium" && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#FEF7E0] text-[#78350F] border border-[#78350F]/15 uppercase tracking-wide">
-                      Medium Risk
+                      Possible Concern
                     </span>
                   )}
                   {riskLevel === "high" && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#FCE8E6] text-[#7F1D1D] border border-[#7F1D1D]/15 uppercase tracking-wide animate-pulse">
-                      High Risk Warning
-                    </span>
-                  )}
-
-                  {manipulationFlags && manipulationFlags.length > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#F3E8FF] text-[#6B21A8] border border-[#6B21A8]/15 uppercase tracking-wide">
-                      Manipulation Observed
-                    </span>
-                  )}
-
-                  {/* Omissions Badge */}
-                  {omissionFlags && omissionFlags.length > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#F8FAFC] text-[#334155] border border-[#94A3B8]/30 uppercase tracking-wide">
-                      Notable Omissions Found
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-[#FCE8E6] text-[#7F1D1D] border border-[#7F1D1D]/15 uppercase tracking-wide">
+                      Worth a Closer Look
                     </span>
                   )}
                 </div>
@@ -1067,51 +1039,6 @@ export default function WaitingRoomPage() {
                 {confidenceLevel === "low" && confidenceNote && (
                   <div className="p-4 bg-[#FFF7ED] border border-[#9A3412]/15 text-[#9A3412] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
                     {confidenceNote}
-                  </div>
-                )}
-
-                {/* Risk Reasons */}
-                {riskLevel === "medium" && riskReason && (
-                  <div className="p-4 bg-[#FEF7E0]/60 border border-[#B06000]/15 text-[#78350F] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
-                    {riskReason}
-                  </div>
-                )}
-                {riskLevel === "high" && riskReason && (
-                  <div className="p-4 bg-[#FCE8E6]/60 border border-[#C5221F]/15 text-[#7F1D1D] rounded-xl text-xs md:text-sm font-semibold leading-relaxed">
-                    {riskReason}
-                  </div>
-                )}
-
-                {/* Manipulation list */}
-                {manipulationFlags && manipulationFlags.length > 0 && (
-                  <div className="p-4 bg-[#F3E8FF]/40 border border-[#6B21A8]/15 text-[#6B21A8] rounded-xl text-xs md:text-sm font-semibold leading-relaxed space-y-2">
-                    <p className="font-extrabold tracking-wide uppercase text-[10px]">
-                      Pressure or Guilt tactics found:
-                    </p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {manipulationFlags.map((flag, idx) => (
-                        <li key={idx}>{flag}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Omissions Callout Box (What's Missing) */}
-                {omissionFlags && omissionFlags.length > 0 && (
-                  <div className="p-5 bg-[#F8FAFC] border border-dashed border-[#94A3B8] text-[#334155] rounded-xl text-xs md:text-sm font-semibold leading-relaxed space-y-3">
-                    <div className="space-y-0.5">
-                      <p className="font-extrabold tracking-wide uppercase text-[11px] text-[#334155]">
-                        What&apos;s Missing
-                      </p>
-                      <p className="text-[#475569] text-xs">
-                        Sometimes what&apos;s left out matters as much as what&apos;s said.
-                      </p>
-                    </div>
-                    <ul className="list-disc pl-5 space-y-1 text-[#334155]">
-                      {omissionFlags.map((flag, flagIdx) => (
-                        <li key={flagIdx}>{flag}</li>
-                      ))}
-                    </ul>
                   </div>
                 )}
 
@@ -1131,9 +1058,80 @@ export default function WaitingRoomPage() {
                   </div>
                 )}
 
-                {/* Explanation block */}
-                <div className="prose max-w-none pt-2 border-t border-[#E2E8F0]/60">
-                  {renderExplanation(explanation)}
+                {/* THREE-LAYER ANALYSIS VISUALS */}
+                <div className="space-y-8 text-left pt-4 border-t border-[#E2E8F0]">
+                  {/* Layer 1: Understand It */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-[#0D9488] uppercase tracking-widest block border-b border-[#E2E8F0] pb-2">
+                      1. Understand It
+                    </h3>
+                    <div className="prose max-w-none">
+                      {renderExplanation(understandItText)}
+                    </div>
+                  </div>
+
+                  {/* Layer 2: What Matters */}
+                  {whatMattersItems.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-bold text-[#0D9488] uppercase tracking-widest block border-b border-[#E2E8F0] pb-2">
+                        2. What Matters
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-2 text-sm md:text-base font-semibold text-slate-800">
+                        {whatMattersItems.map((item, idx) => (
+                          <li key={idx} className="leading-relaxed">{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Layer 3: What They're Not Telling You */}
+                  {whatTheyAreNotTellingYouItems.length > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-bold text-[#0D9488] uppercase tracking-widest block border-b border-[#E2E8F0] pb-2">
+                        3. What They&apos;re Not Telling You
+                      </h3>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        {statedUntelling.length > 0 && (
+                          <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Stated:</span>
+                            <ul className="list-disc pl-5 space-y-1.5 text-xs md:text-sm font-semibold text-slate-700">
+                              {statedUntelling.map((item, idx) => (
+                                <li key={idx} className="leading-relaxed">{item.text}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {impliedUntelling.length > 0 && (
+                          <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Implied:</span>
+                            <ul className="list-disc pl-5 space-y-1.5 text-xs md:text-sm font-semibold text-slate-700">
+                              {impliedUntelling.map((item, idx) => (
+                                <li key={idx} className="leading-relaxed">{item.text}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {verifyUntelling.length > 0 && (
+                          <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Worth verifying:</span>
+                            <ul className="list-disc pl-5 space-y-1.5 text-xs md:text-sm font-semibold text-slate-700">
+                              {verifyUntelling.map((item, idx) => (
+                                <li key={idx} className="leading-relaxed">{item.text}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footnote disclaimer */}
+                <div className="text-[11px] text-slate-500 text-center italic leading-relaxed pt-2">
+                  This is an AI-generated analysis, not a guarantee. Verify important information before making legal, financial, or personal decisions.
                 </div>
 
                 {/* Reset button */}
